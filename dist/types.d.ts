@@ -34,7 +34,7 @@ export type MentionTask = {
     createdAt?: string | null;
     updatedAt?: string | null;
 };
-export type MemorUploadConfig = {
+export type ChekCliConfig = {
     enabled: boolean;
     backendAppBaseUrl: string;
     accessToken: string;

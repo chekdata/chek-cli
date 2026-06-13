@@ -1,9 +1,13 @@
-import type { MemorUploadConfig } from "./types.js";
+import type { ChekCliConfig } from "./types.js";
 
 export const DEFAULT_BACKEND_APP_BASE_URL = "https://api-dev.chekkk.com/api/backend-app";
 export const DEFAULT_POLL_INTERVAL_MS = 5_000;
 export const DEFAULT_SESSION_KEY = "agent:main:chek:mentions";
-export const ACCESS_TOKEN_ENV_NAMES = ["CHEK_ACCESS_TOKEN", "CHEK_MEMOR_ACCESS_TOKEN"] as const;
+export const ACCESS_TOKEN_ENV_NAMES = [
+  "CHEK_ACCESS_TOKEN",
+  "CHEK_CLI_ACCESS_TOKEN",
+  "CHEK_MEMOR_ACCESS_TOKEN",
+] as const;
 
 export const CONFIG_JSON_SCHEMA = {
   type: "object",
@@ -110,7 +114,7 @@ export function normalizeBackendAppBaseUrl(value: string): string {
   return `${trimmed}/api/backend-app`;
 }
 
-export function parseConfig(value: unknown): MemorUploadConfig {
+export function parseConfig(value: unknown): ChekCliConfig {
   const record = asRecord(value);
   return {
     enabled: readBoolean(record, "enabled", true),
@@ -138,7 +142,7 @@ export function parseConfig(value: unknown): MemorUploadConfig {
   };
 }
 
-export function resolveAccessToken(config: MemorUploadConfig): string {
+export function resolveAccessToken(config: ChekCliConfig): string {
   if (config.accessToken.trim()) {
     return config.accessToken.trim();
   }
@@ -152,16 +156,16 @@ export function resolveAccessToken(config: MemorUploadConfig): string {
 }
 
 export function withConfigPatch(
-  baseConfig: MemorUploadConfig,
-  patch: Partial<MemorUploadConfig>,
-): MemorUploadConfig {
+  baseConfig: ChekCliConfig,
+  patch: Partial<ChekCliConfig>,
+): ChekCliConfig {
   return parseConfig({
     ...baseConfig,
     ...patch,
   });
 }
 
-export function isConfigured(config: MemorUploadConfig): boolean {
+export function isConfigured(config: ChekCliConfig): boolean {
   return Boolean(config.enabled && config.backendAppBaseUrl && resolveAccessToken(config));
 }
 

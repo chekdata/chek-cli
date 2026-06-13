@@ -8,7 +8,7 @@ import {
   parseConfig,
 } from "./config.js";
 
-describe("memor-upload config", () => {
+describe("chek-cli config", () => {
   it("fills defaults", () => {
     const config = parseConfig({});
     expect(config.backendAppBaseUrl).toBe(DEFAULT_BACKEND_APP_BASE_URL);

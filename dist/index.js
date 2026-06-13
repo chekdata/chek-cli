@@ -1,10 +1,10 @@
 import { CONFIG_JSON_SCHEMA, CONFIG_UI_HINTS, parseConfig, } from "./config.js";
-import { registerMemorUploadCli, registerMemorUploadCommands, } from "./commands.js";
-import { MemorUploadController } from "./service.js";
-const memorUploadPlugin = {
-    id: "memor-upload",
-    name: "MEMOR Upload",
-    description: "Bridge CHEK buddy-room @ mentions into a stable local OpenClaw session and auto-reply from there.",
+import { registerChekCliProgram, registerChekCliCommands, } from "./commands.js";
+import { ChekCliController } from "./service.js";
+const chekCliPlugin = {
+    id: "chek-cli",
+    name: "CHEK CLI",
+    description: "Agent-native CHEK CLI and OpenClaw helpers for review rooms, AI product publication, and mention handling.",
     configSchema: {
         parse: parseConfig,
         jsonSchema: CONFIG_JSON_SCHEMA,
@@ -12,17 +12,17 @@ const memorUploadPlugin = {
     },
     register(api) {
         const config = parseConfig(api.pluginConfig);
-        const controller = new MemorUploadController({
+        const controller = new ChekCliController({
             config,
             logger: api.logger,
             runtimeConfig: api.runtime.config,
         });
-        registerMemorUploadCommands(api, controller);
+        registerChekCliCommands(api, controller);
         api.registerCli(({ program }) => {
-            registerMemorUploadCli(program, api, controller);
+            registerChekCliProgram(program, api, controller);
         }, { commands: ["chek"] });
         api.registerService({
-            id: "memor-upload",
+            id: "chek-cli",
             start: async ({ stateDir }) => {
                 controller.attachStateDir(stateDir);
                 await controller.start();
@@ -33,4 +33,4 @@ const memorUploadPlugin = {
         });
     },
 };
-export default memorUploadPlugin;
+export default chekCliPlugin;

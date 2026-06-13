@@ -1,17 +1,19 @@
-# CHEK-APP-CLI
+# CHEK CLI
 
 English | [中文](README.zh-CN.md)
 
-Agent-native CLI for CHEK's intelligent vehicle and humanoid robot data apps.
+Agent-native CLI for CHEK product publication, review rooms, and backend capabilities.
 
-CHEK-APP-CLI turns CHEK backend capabilities into an interface that AI agents can
-use directly: discover schemas, call generated OpenAPI commands, run stable
+CHEK CLI turns CHEK backend capabilities into an interface that AI agents can
+use directly: publish AI product review rooms, check duplicates, submit ratings
+with evidence, discover schemas, call generated OpenAPI commands, run stable
 shortcuts, authenticate, and fall back to raw API calls when needed.
 
 ## Product Positioning
 
-CHEK-APP-CLI is the agent entry point for building:
+CHEK CLI is the agent entry point for building:
 
+- AI product review rooms: public product submission, web-researched evidence, duplicate checks, rating, and ongoing re-review.
 - Car-buying OpenClaw (买车 OpenClaw): agent workflows for finding, comparing, explaining, and acting on vehicle choices.
 - AI-native Autohome (AI 版汽车之家): an agent-first vehicle research and decision interface, not just a human browsing UI.
 - Dongjidi-style intelligence (懂机帝): structured specs, rankings, comparisons, and explainable recommendations for machines.
@@ -57,6 +59,38 @@ chek auth status
 chek auth login --method token --token "$CHEK_ACCESS_TOKEN" --profile dev-agent
 chek registry status
 chek manifest
+
+chek ai-product +research-plan \
+  --category 生产力工具 \
+  --product-name Kimi \
+  --software-version "2026 年 7 月网页版"
+```
+
+AI product publish/review examples:
+
+```bash
+chek ai-product +duplicate-check \
+  --category 具身机器人 \
+  --product-name "Unitree G1" \
+  --hardware-model EDU \
+  --software-version v1.2.4 \
+  --dry-run
+
+chek ai-product +publish \
+  --category 生产力工具 \
+  --product-name Kimi \
+  --software-version "2026 年 7 月网页版" \
+  --reason "值得复评长文本能力" \
+  --scenario "办公、学习、资料整理" \
+  --source-url "https://example.com/source" \
+  --dry-run
+
+chek ai-product +review \
+  --post-id <room_uuid> \
+  --stars 4.5 \
+  --comment "版本确认后体验稳定" \
+  --evidence-url "https://example.com/evidence" \
+  --dry-run
 ```
 
 Vehicle and ranking examples:
@@ -100,7 +134,7 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 
 | Layer | Commands | Purpose |
 | --- | --- | --- |
-| Shortcuts | `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | Stable high-level workflows for agents |
+| Shortcuts | `ai-product +publish`, `ai-product +review`, `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | Stable high-level workflows for agents |
 | OpenAPI tree | `vehicle vehicles batch-search`, `backend-app agent skills-run`, `humanoid robots detail` | Generated service/resource/method commands |
 | API commands | `schema`, `call`, `api` | Discovery, registry-backed calls, and raw backend fallback |
 | Session | `--as auto/user/service/none`, `config default-as`, `auth`, `auth profile`, `auth credential` | Lark-style identity switching, API origin, token, profile, and credential management |
@@ -117,8 +151,8 @@ chek registry status
 
 ## Auth
 
-The CLI stores local config under `~/.chek-app-cli` by default. Set
-`CHEK_APP_CLI_HOME` to isolate a session.
+The CLI stores local config under `~/.chek-cli` by default. Set
+`CHEK_CLI_HOME` to isolate a session.
 
 ```bash
 chek config set-env dev
@@ -207,6 +241,6 @@ Tag releases build wheel/sdist artifacts through GitHub Actions. If
 also includes a Dockerfile:
 
 ```bash
-docker build -t chek-app-cli .
-docker run --rm chek-app-cli manifest
+docker build -t chek-cli .
+docker run --rm chek-cli manifest
 ```

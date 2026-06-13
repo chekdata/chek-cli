@@ -1,4 +1,4 @@
-"""Core helpers for CHEK-APP-CLI."""
+"""Core helpers for CHEK CLI."""
 
 from __future__ import annotations
 
@@ -274,7 +274,7 @@ def start_h5_server(repo_root: Path, *, port: int, host: str, extra_args: tuple[
     args = ["pnpm", "dev:h5", *extra_args]
 
     log_file = log_path.open("a", encoding="utf-8")
-    log_file.write(f"\n--- CHEK-APP-CLI serve h5 port={port} host={host} ---\n")
+    log_file.write(f"\n--- CHEK CLI serve h5 port={port} host={host} ---\n")
     log_file.flush()
     process = subprocess.Popen(
         args,
@@ -327,7 +327,7 @@ def read_logs(repo_root: Path, lines: int) -> dict[str, Any]:
 
 
 def http_smoke(url: str, timeout: float = 10.0) -> dict[str, Any]:
-    request = Request(url, headers={"User-Agent": "CHEK-APP-CLI/0.1"})
+    request = Request(url, headers={"User-Agent": "CHEK-CLI/0.1"})
     started = time.time()
     try:
         with urlopen(request, timeout=timeout) as response:

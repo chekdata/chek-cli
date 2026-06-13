@@ -8,15 +8,15 @@ import { ChekApiClient } from "./chek-api.js";
 import { maskToken, resolveAccessToken } from "./config.js";
 import type { OpenClawPluginApi } from "./openclaw-types.js";
 import { buildBootstrapMessage } from "./render.js";
-import { MemorUploadController } from "./service.js";
-import type { BrowserAuthSession, MemorUploadConfig } from "./types.js";
+import { ChekCliController } from "./service.js";
+import type { BrowserAuthSession, ChekCliConfig } from "./types.js";
 
 const AUTHORIZATION_WAIT_TIMEOUT_MS = 180_000;
 
-function formatStatus(controller: MemorUploadController): string {
+function formatStatus(controller: ChekCliController): string {
   const snapshot = controller.getSnapshot();
   return [
-    "MEMOR Upload 状态",
+    "CHEK CLI 状态",
     `- running: ${snapshot.running ? "yes" : "no"}`,
     `- configured: ${snapshot.configured ? "yes" : "no"}`,
     `- backend: ${snapshot.backendAppBaseUrl}`,
@@ -52,9 +52,9 @@ function formatSetupUsage(): string {
   ].join("\n");
 }
 
-function summarizeSavedConfig(config: MemorUploadConfig): string {
+function summarizeSavedConfig(config: ChekCliConfig): string {
   return [
-    "MEMOR Upload 已保存。",
+    "CHEK CLI 已保存。",
     `- backend: ${config.backendAppBaseUrl}`,
     `- session: ${config.sessionKey}`,
     `- installId: ${config.installId || "-"}`,
@@ -79,7 +79,7 @@ function sanitizeToken(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function withStableIdentity(config: MemorUploadConfig): Partial<MemorUploadConfig> {
+function withStableIdentity(config: ChekCliConfig): Partial<ChekCliConfig> {
   const installId = config.installId.trim() || randomUUID();
   const hostname = sanitizeToken(os.hostname()) || "openclaw-device";
   const deviceId = config.deviceId.trim() || `${hostname}-${randomUUID().slice(0, 8)}`;
@@ -115,9 +115,9 @@ async function openBrowser(url: string): Promise<void> {
 }
 
 async function ensureBaseSetup(
-  controller: MemorUploadController,
-  patch: Partial<MemorUploadConfig>,
-): Promise<MemorUploadConfig> {
+  controller: ChekCliController,
+  patch: Partial<ChekCliConfig>,
+): Promise<ChekCliConfig> {
   const baseConfig = controller.getConfig();
   return await controller.persistConfigPatch({
     ...withStableIdentity(baseConfig),
@@ -126,7 +126,7 @@ async function ensureBaseSetup(
 }
 
 async function waitForBrowserAuthorization(
-  controller: MemorUploadController,
+  controller: ChekCliController,
   timeoutMs = AUTHORIZATION_WAIT_TIMEOUT_MS,
 ): Promise<BrowserAuthSession | null> {
   const startedAt = Date.now();
@@ -148,7 +148,7 @@ async function waitForBrowserAuthorization(
   return null;
 }
 
-async function beginBrowserSetup(controller: MemorUploadController): Promise<string> {
+async function beginBrowserSetup(controller: ChekCliController): Promise<string> {
   const currentConfig = controller.getConfig();
   const api = new ChekApiClient({
     baseUrl: currentConfig.backendAppBaseUrl,
@@ -158,7 +158,7 @@ async function beginBrowserSetup(controller: MemorUploadController): Promise<str
     deviceId: currentConfig.deviceId,
     sessionKey: currentConfig.sessionKey,
     metadata: {
-      source: "memor-upload",
+      source: "chek-cli",
       setupMode: "browser_auth",
     },
   });
@@ -207,8 +207,8 @@ async function beginBrowserSetup(controller: MemorUploadController): Promise<str
 }
 
 async function runSetup(
-  controller: MemorUploadController,
-  patch: Partial<MemorUploadConfig>,
+  controller: ChekCliController,
+  patch: Partial<ChekCliConfig>,
   opts: { browserAuth: boolean },
 ): Promise<string> {
   const savedConfig = await ensureBaseSetup(controller, patch);
@@ -234,13 +234,13 @@ async function runSetup(
   return await beginBrowserSetup(controller);
 }
 
-export function registerMemorUploadCommands(
+export function registerChekCliCommands(
   api: OpenClawPluginApi,
-  controller: MemorUploadController,
+  controller: ChekCliController,
 ): void {
   api.registerCommand({
     name: "chek-setup",
-    description: "Configure MEMOR Upload for CHEK mention-task polling.",
+    description: "Configure CHEK CLI for CHEK mention-task polling.",
     acceptsArgs: true,
     handler: async (ctx) => {
       const rawArgs = ctx.args?.trim() ?? "";
@@ -250,7 +250,7 @@ export function registerMemorUploadCommands(
         };
       }
       const parsed = parseSetupArgs(rawArgs);
-      const patch: Partial<MemorUploadConfig> = {};
+      const patch: Partial<ChekCliConfig> = {};
       if (parsed.token !== undefined) patch.accessToken = parsed.token;
       if (parsed.backend !== undefined) patch.backendAppBaseUrl = parsed.backend;
       if (parsed.session !== undefined) patch.sessionKey = parsed.session;
@@ -273,7 +273,7 @@ export function registerMemorUploadCommands(
 
   api.registerCommand({
     name: "chek-status",
-    description: "Show MEMOR Upload runtime status.",
+    description: "Show CHEK CLI runtime status.",
     handler: async () => ({
       text: formatStatus(controller),
     }),
@@ -281,31 +281,31 @@ export function registerMemorUploadCommands(
 
   api.registerCommand({
     name: "chek-bootstrap",
-    description: "Print the one-shot bootstrap text for MEMOR Upload.",
+    description: "Print the one-shot bootstrap text for CHEK CLI.",
     handler: async () => ({
       text: buildBootstrapMessage(),
     }),
   });
 }
 
-export function registerMemorUploadCli(
+export function registerChekCliProgram(
   program: Command,
   api: OpenClawPluginApi,
-  controller: MemorUploadController,
+  controller: ChekCliController,
 ): void {
   void api;
-  const chek = program.command("chek").description("MEMOR Upload helpers for CHEK");
+  const chek = program.command("chek").description("CHEK CLI helpers for CHEK");
 
   chek
     .command("setup")
-    .description("Persist MEMOR Upload config into OpenClaw")
+    .description("Persist CHEK CLI config into OpenClaw")
     .option("--token <token>", "CHEK access token fallback")
     .option("--backend <url>", "CHEK backend-app base URL")
     .option("--session <key>", "Stable local OpenClaw session key")
     .option("--interval <ms>", "Poll interval in milliseconds")
     .option("--disable", "Disable the bridge after saving", false)
     .action(async (options) => {
-      const patch: Partial<MemorUploadConfig> = {};
+      const patch: Partial<ChekCliConfig> = {};
       if (options.token) {
         patch.accessToken = String(options.token).trim();
         patch.authorizationStatus = "token_fallback";
@@ -323,7 +323,7 @@ export function registerMemorUploadCli(
 
   chek
     .command("status")
-    .description("Print current MEMOR Upload runtime status")
+    .description("Print current CHEK CLI runtime status")
     .action(() => {
       console.log(formatStatus(controller));
     });

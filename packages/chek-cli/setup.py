@@ -1,4 +1,4 @@
-"""Setup for CHEK-APP-CLI."""
+"""Setup for CHEK CLI."""
 
 from pathlib import Path
 from setuptools import find_namespace_packages, setup
@@ -16,13 +16,13 @@ def read_readme() -> str:
 
 
 setup(
-    name="chek-app-cli",
+    name="chek-cli",
     version="0.4.0",
     author="CHEK frontend contributors",
-    description="Agent-first CLI for CHEK app backend capabilities",
+    description="Agent-first CLI for CHEK product publication, review rooms, and backend capabilities",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/chekdata/CHEK-APP-CLI",
+    url="https://github.com/chekdata/chek-cli",
     packages=find_namespace_packages(include=["cli_anything.*"]),
     python_requires=">=3.10",
     install_requires=[
@@ -40,10 +40,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "chek-app-cli=cli_anything.frontend_app.frontend_cli:main",
             "chek=cli_anything.frontend_app.frontend_cli:main",
-            "cli-anything-frontend-app=cli_anything.frontend_app.frontend_cli:main",
-            "frontend-app-agent=cli_anything.frontend_app.frontend_cli:main",
+            "chek-cli=cli_anything.frontend_app.frontend_cli:main",
         ],
     },
     package_data={

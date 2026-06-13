@@ -1,4 +1,4 @@
-"""Module entry point for CHEK-APP-CLI."""
+"""Module entry point for CHEK CLI."""
 
 from .frontend_cli import main
 

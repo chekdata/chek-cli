@@ -1,4 +1,4 @@
-# MEMOR Upload Troubleshooting
+# CHEK CLI Troubleshooting
 
 ## 插件装不上
 
@@ -12,13 +12,13 @@ openclaw plugins list
 然后重试：
 
 ```bash
-openclaw plugins install https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1
+openclaw plugins install https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1
 ```
 
 本地联调可以直接改用：
 
 ```bash
-openclaw plugins install --link /absolute/path/to/memor-upload
+openclaw plugins install --link /absolute/path/to/chek-cli
 ```
 
 ## 装上了，但还没开始收任务
@@ -40,7 +40,7 @@ openclaw plugins install --link /absolute/path/to/memor-upload
 优先检查：
 
 - 当前 token 对应的 CHEK 用户是否就是被 `@` 的那个用户
-- 该用户是否已经加入对应搭子房间
+- 该用户是否已经加入对应评测房间
 - `backend` 配置是否指向正确的 `backend-app` 网关地址
 - `sessionKey` 是否被错误改掉
 

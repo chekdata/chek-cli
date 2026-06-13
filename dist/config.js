@@ -1,7 +1,11 @@
 export const DEFAULT_BACKEND_APP_BASE_URL = "https://api-dev.chekkk.com/api/backend-app";
 export const DEFAULT_POLL_INTERVAL_MS = 5_000;
 export const DEFAULT_SESSION_KEY = "agent:main:chek:mentions";
-export const ACCESS_TOKEN_ENV_NAMES = ["CHEK_ACCESS_TOKEN", "CHEK_MEMOR_ACCESS_TOKEN"];
+export const ACCESS_TOKEN_ENV_NAMES = [
+    "CHEK_ACCESS_TOKEN",
+    "CHEK_CLI_ACCESS_TOKEN",
+    "CHEK_MEMOR_ACCESS_TOKEN",
+];
 export const CONFIG_JSON_SCHEMA = {
     type: "object",
     additionalProperties: false,

@@ -1,5 +1,5 @@
 import type { BuddyRoomMessage, ChatFinalPayload, MentionTask, ReplyIntent } from "./types.js";
-export declare const CURRENT_INSTALL_SPEC = "https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1";
+export declare const CURRENT_INSTALL_SPEC = "https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1";
 type ReplyStrategy = {
     intent: ReplyIntent;
     directReply: string | null;

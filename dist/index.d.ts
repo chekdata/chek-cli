@@ -1,6 +1,6 @@
 import { parseConfig } from "./config.js";
 import type { OpenClawPluginApi } from "./openclaw-types.js";
-declare const memorUploadPlugin: {
+declare const chekCliPlugin: {
     id: string;
     name: string;
     description: string;
@@ -109,4 +109,4 @@ declare const memorUploadPlugin: {
     };
     register(api: OpenClawPluginApi): void;
 };
-export default memorUploadPlugin;
+export default chekCliPlugin;

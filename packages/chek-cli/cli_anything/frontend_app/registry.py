@@ -1,4 +1,4 @@
-"""OpenAPI-backed registry for CHEK-APP-CLI."""
+"""OpenAPI-backed registry for CHEK CLI."""
 
 from __future__ import annotations
 

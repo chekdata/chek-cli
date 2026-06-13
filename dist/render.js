@@ -1,4 +1,4 @@
-export const CURRENT_INSTALL_SPEC = "https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1";
+export const CURRENT_INSTALL_SPEC = "https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1";
 const MAX_CONTEXT_MESSAGES = 6;
 function compact(value, maxLength) {
     const normalized = value.replace(/\s+/g, " ").trim();
@@ -126,7 +126,7 @@ export function detectReplyIntent(task, roomMessages = []) {
     const corpus = [task.payload.postTitle || "", task.payload.messageContent || ""]
         .join(" ")
         .toLowerCase();
-    if (/openclaw|memor upload|memor-upload|\/chek-setup|设备绑定|浏览器授权|完成授权|完成绑定/.test(corpus)) {
+    if (/openclaw|chek cli|chek-cli|memor upload|memor-upload|\/chek-setup|设备绑定|浏览器授权|完成授权|完成绑定/.test(corpus)) {
         return "openclaw_bootstrap";
     }
     if (/怎么下载|下载.*(失败|没反应|没反馈|不了|不动)|点下载|下载模型|下载链接|网络问题|源不可用/.test(corpus)) {
@@ -156,7 +156,7 @@ function buildDirectStrategyReply(intent, subject, task) {
     const content = String(task.payload.messageContent || "");
     switch (intent) {
         case "openclaw_bootstrap":
-            return `第一步先安装 MEMOR Upload：openclaw plugins install ${CURRENT_INSTALL_SPEC}。装完如果没自动继续，再执行 /chek-setup。`;
+            return `第一步先安装 CHEK CLI：openclaw plugins install ${CURRENT_INSTALL_SPEC}。装完如果没自动继续，再执行 /chek-setup。`;
         case "posting_copy":
             if (/怎么介绍|如何介绍|怎么讲|怎么描述/.test(content)) {
                 return `可以直接发：这是${subject}，已附演示视频、适配机型和安装说明，拿来就能跑，感兴趣的来聊。`;
@@ -194,7 +194,7 @@ function buildStrategyGuidance(intent, subject) {
     switch (intent) {
         case "openclaw_bootstrap":
             return {
-                guidance: "对方在问 OpenClaw / MEMOR Upload 的安装、授权或绑定。请直接回答下一步操作，优先给安装命令和 /chek-setup，不要岔到房间内容优化。",
+                guidance: "对方在问 OpenClaw / CHEK CLI 的安装、授权或绑定。请直接回答下一步操作，优先给安装命令和 /chek-setup，不要岔到房间内容优化。",
                 summary: "直接给 OpenClaw 安装与授权下一步",
             };
         case "posting_copy":
@@ -258,7 +258,7 @@ export function buildTaskInjectionText(task, roomMessages = []) {
     const strategy = buildReplyStrategy(task, roomMessages);
     const recentMessages = selectRoomMessagesForContext(task, roomMessages);
     return [
-        `你在 CHEK 搭子房间里被 @ 了。`,
+        `你在 CHEK 房间里被 @ 了。`,
         `房间：${roomTitle}`,
         `发起人：${sender}`,
         `原消息：${content}`,
@@ -275,7 +275,7 @@ export function buildAutoReplyPrompt(task, roomMessages = []) {
     const strategy = buildReplyStrategy(task, roomMessages);
     const recentMessages = selectRoomMessagesForContext(task, roomMessages);
     return [
-        "你正在替本机用户回复 CHEK 搭子房间里的一条 @ 提醒。",
+        "你正在替本机用户回复 CHEK 房间里的一条 @ 提醒。",
         "请像一个真实、靠谱、在房间里正常聊天的成员一样回复。",
         "回复规则：",
         "- 直接输出最终要发到房间里的正文",
@@ -314,7 +314,7 @@ export function buildBootstrapMessage() {
         "请在这台机器上安装并配置 CHEK 房间助手插件，并尽量自动完成初始化。",
         "",
         "目标：",
-        "1. 安装 OpenClaw 插件 MEMOR Upload",
+        "1. 安装 OpenClaw 插件 CHEK CLI",
         "2. 安装后重启 Gateway",
         "3. 自动拉起浏览器完成 CHEK 授权与设备绑定",
         "4. 做一次连通性测试",
@@ -327,10 +327,10 @@ export function buildBootstrapMessage() {
         "如果浏览器授权失败，再退回 `/chek-setup token=<CHEK_ACCESS_TOKEN>` 或 `openclaw chek setup --token <CHEK_ACCESS_TOKEN>`。",
         "",
         "参考链接：",
-        "- 插件说明：https://github.com/chekdata/memor-upload#readme",
-        "- setup skill：https://github.com/chekdata/memor-upload/blob/main/skills/chek-setup/SKILL.md",
-        "- 浏览器授权说明：https://github.com/chekdata/memor-upload/blob/main/docs/device-code-auth.md",
-        "- 排障说明：https://github.com/chekdata/memor-upload/blob/main/docs/troubleshooting.md",
+        "- 插件说明：https://github.com/chekdata/chek-cli#readme",
+        "- setup skill：https://github.com/chekdata/chek-cli/blob/main/skills/chek-setup/SKILL.md",
+        "- 浏览器授权说明：https://github.com/chekdata/chek-cli/blob/main/docs/device-code-auth.md",
+        "- 排障说明：https://github.com/chekdata/chek-cli/blob/main/docs/troubleshooting.md",
         "",
         "执行要求：",
         "- 如果可以直接执行宿主机命令，就直接完成",

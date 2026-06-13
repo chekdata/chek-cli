@@ -1,4 +1,4 @@
-"""Backend API layer for CHEK-APP-CLI.
+"""Backend API layer for CHEK CLI.
 
 This follows the lark-cli shape: config/auth/raw API/domain shortcuts.
 """
@@ -23,14 +23,14 @@ ENV_ORIGINS = {
 }
 IDENTITY_CHOICES = ("auto", "user", "service", "none")
 
-CONFIG_DIR = Path(os.environ.get("CHEK_APP_CLI_HOME", "~/.chek-app-cli")).expanduser()
+CONFIG_DIR = Path(os.environ.get("CHEK_CLI_HOME") or os.environ.get("CHEK_APP_CLI_HOME", "~/.chek-cli")).expanduser()
 CONFIG_FILE = CONFIG_DIR / "config.json"
 TOKEN_FILE = CONFIG_DIR / "token.json"
 PROFILES_FILE = CONFIG_DIR / "profiles.json"
 
 
 def config_dir() -> Path:
-    return Path(os.environ.get("CHEK_APP_CLI_HOME", "~/.chek-app-cli")).expanduser()
+    return Path(os.environ.get("CHEK_CLI_HOME") or os.environ.get("CHEK_APP_CLI_HOME", "~/.chek-cli")).expanduser()
 
 
 def config_file() -> Path:
@@ -60,7 +60,7 @@ def load_json_file(path: Path, default: Any) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise HarnessError("Invalid CHEK-APP-CLI config file.", details={"path": str(path)}) from exc
+        raise HarnessError("Invalid CHEK CLI config file.", details={"path": str(path)}) from exc
 
 
 def save_json_file(path: Path, data: Any, *, private: bool = False) -> None:
@@ -567,7 +567,7 @@ def request_api(
     resolved_identity, token = credential_for_identity(identity)
     headers = {
         "Accept": "application/json",
-        "User-Agent": "CHEK-APP-CLI/0.1",
+        "User-Agent": "CHEK-CLI/0.1",
     }
     body = None
     if data is not None:

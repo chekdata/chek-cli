@@ -1,25 +1,26 @@
 {
-  "name": "@chek/memor-upload",
+  "name": "@chek/chek-cli",
   "version": "0.2.0",
-  "description": "MEMOR Upload for OpenClaw: bridge CHEK buddy room @ mentions into a local OpenClaw session and auto-reply.",
+  "description": "CHEK CLI for agent-native product publication, review rooms, backend API access, and OpenClaw helpers.",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/chekdata/memor-upload.git"
+    "url": "https://github.com/chekdata/chek-cli.git"
   },
-  "homepage": "https://github.com/chekdata/memor-upload",
+  "homepage": "https://github.com/chekdata/chek-cli",
   "bugs": {
-    "url": "https://github.com/chekdata/memor-upload/issues"
+    "url": "https://github.com/chekdata/chek-cli/issues"
   },
   "keywords": [
     "openclaw",
     "chek",
-    "plugin",
-    "buddy-room",
+    "cli",
+    "ai-product",
+    "review-room",
     "mentions",
-    "digital-resident",
-    "memor-upload"
+    "agent-native",
+    "chek-cli"
   ],
   "files": [
     "dist",
@@ -35,7 +36,7 @@
       "./dist/index.js"
     ],
     "install": {
-      "npmSpec": "https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1",
+      "npmSpec": "https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1",
       "localPath": ".",
       "defaultChoice": "npm"
     }

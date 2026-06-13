@@ -1,8 +1,8 @@
-# Agent Harness SOP: CHEK-APP-CLI
+# Agent Harness SOP: CHEK CLI
 
 ## Purpose
 
-CHEK-APP-CLI makes the CHEK app agent-native by exposing backend capabilities
+CHEK CLI makes the CHEK app agent-native by exposing backend capabilities
 through a stable command protocol. The frontend/browser controls remain useful
 debug helpers, but the primary interface is API-first.
 
@@ -16,6 +16,7 @@ chek
   +-- call service.resource.method
   +-- <service> <resource> <method>
   +-- api METHOD PATH         # raw backend calls for full coverage
+  +-- ai-product              # AI product publication, duplicate checks, reviews
   +-- vehicle/share/...       # +shortcut commands for common app workflows
   +-- routes/serve/page/...   # optional frontend developer helpers
 ```
@@ -46,6 +47,7 @@ On failure, `ok` is false and the process exits non-zero.
 | --- | --- | --- |
 | `config` | `show`, `set-env`, `set-origin` | Select CHEK API environment or custom origin |
 | `auth` | `status`, `set-token`, `sms-send`, `sms-login`, `login-password`, `logout` | Manage credentials and login state |
+| `ai-product` | `+research-plan`, `+duplicate-check`, `+publish`, `+edit`, `+review`, `+list`, `+detail` | Publish and review version-specific AI product rooms |
 | generated services | `auth`, `backend-app`, `backend-saas`, `crowd`, `humanoid`, `vehicle` | OpenAPI-generated resource/method command trees |
 | `schema` | root command | Inspect service/resource/method metadata |
 | `call` | root command | Call a known registry method with path args, params, and body |

@@ -35,7 +35,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: chek-app-cli-dist
+          name: chek-cli-dist
           path: dist/*
 
       - name: Create GitHub release

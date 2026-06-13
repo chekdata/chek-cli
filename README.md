@@ -1,92 +1,121 @@
-# MEMOR Upload
+# CHEK CLI
 
-![joined](https://img.shields.io/github/downloads/chekdata/memor-upload/total?label=joined)
-![phase](https://img.shields.io/badge/phase-2%20live-0A7D34)
-![license](https://img.shields.io/github/license/chekdata/memor-upload)
+![downloads](https://img.shields.io/github/downloads/chekdata/chek-cli/total?label=downloads)
+![phase](https://img.shields.io/badge/phase-agent%20native-0A7D34)
+![license](https://img.shields.io/github/license/chekdata/chek-cli)
 
-`MEMOR Upload` is a public OpenClaw plugin project about cyber immortality, continuity of consciousness, and becoming a digital resident.
+`CHEK CLI` is the agent-native command line surface for CHEK. It gives agents and developers a stable way to call CHEK backend capabilities, publish AI product review rooms, check duplicate submissions, submit ratings with evidence, and operate the OpenClaw helper that bridges CHEK room mentions into a local session.
 
-It is not just about turning a person into a chatbot. The long-term goal is to preserve how a person speaks, prefers, remembers, relates, and acts, then keep that presence alive in the networked world as something more durable than a chat log.
+The repository was formerly `chekdata/memor-upload`. The product focus is now CHEK CLI, and the canonical URL is:
+
+```text
+https://github.com/chekdata/chek-cli
+```
 
 For Chinese documentation, see [README.zh-CN.md](./README.zh-CN.md).
 
-## What This Repository Ships Today
+## What This Repository Ships
 
-The repository currently ships a practical Phase 1 plugin for CHEK:
+- `packages/chek-cli`: the Python agent-native CLI, installed as `chek` and `chek-cli`
+- OpenAPI-backed command trees for CHEK backend services
+- high-frequency shortcuts for vehicles, humanoid robots, discovery, share, MiControl, and AI product review rooms
+- browser/token auth helpers with Lark-style `--as auto/user/service/none` identity switching
+- an OpenClaw plugin helper for CHEK setup, room `@` mention sync, and auto-reply workflows
+- setup skills and troubleshooting docs for agent installation
 
-- poll CHEK buddy-room `@` mention tasks
-- inject each task into a stable local OpenClaw session
-- auto-generate a short room reply through the local OpenClaw chat loop
-- send that reply back into the CHEK room
-- mark the mention task as `completed` or `failed`
-- provide the merged CHEK agent-native app CLI at `packages/chek-app-cli`
+## AI Product Review Rooms
 
-That means the current repository is already useful as an installation-ready OpenClaw plugin, even before the broader “digital resident” work is complete.
+The new AI product workflow is built around version-specific review rooms:
 
-## CHEK App CLI
+```text
+Public product submission -> all users review -> 5 valid Sun Chaser reviews -> public score -> continuous re-review
+```
 
-`CHEK-APP-CLI` now lives inside this repository at
-[`packages/chek-app-cli`](./packages/chek-app-cli). It is the agent-native CLI
-surface for CHEK intelligent vehicle and humanoid robot data apps:
-
-- car-buying OpenClaw and AI-native Autohome-style workflows
-- intelligent vehicle database and ranking commands
-- humanoid robot database and configuration data commands
-- Lark-style identity switching with `--as auto/user/service/none`
-- OpenAPI-generated command trees, examples, manifest, and smoke checks
-
-Local CLI development:
+Agents can use the CLI to prepare richer submissions:
 
 ```bash
-cd packages/chek-app-cli
+cd packages/chek-cli
+python -m pip install -e ".[dev]"
+
+chek ai-product +research-plan \
+  --category 生产力工具 \
+  --product-name Kimi \
+  --software-version "2026 年 7 月网页版"
+```
+
+The research plan returns web-search queries, source expectations, and the duplicate-check payload. After the agent searches the web and collects sources, it can publish:
+
+```bash
+chek ai-product +publish \
+  --category 生产力工具 \
+  --product-name Kimi \
+  --software-version "2026 年 7 月网页版" \
+  --tag 长文本 \
+  --reason "值得复评长文本能力" \
+  --scenario "办公、学习、资料整理" \
+  --source-url "https://example.com/source" \
+  --dry-run
+```
+
+By default `+publish` runs duplicate-check first and stops when the same `category + product name + hardware model + software version` already exists. Use the matched room from the output to continue reviewing instead of creating a duplicate.
+
+Submit a rating and evidence:
+
+```bash
+chek ai-product +review \
+  --post-id <room_uuid> \
+  --stars 4.5 \
+  --comment "长文本总结稳定，版本已确认" \
+  --evidence "附测试记录和截图链接" \
+  --evidence-url "https://example.com/evidence"
+```
+
+Pure software products can leave `--hardware-model` empty, but `--software-version` is required because AI product rankings are version-specific.
+
+## CHEK CLI
+
+Local development:
+
+```bash
+cd packages/chek-cli
 python -m pip install -e ".[dev]"
 chek manifest
 chek smoke api --dry-run
 ```
 
-## The Larger Vision
+Core examples:
 
-MEMOR Upload is being built along three lines:
+```bash
+chek config show
+chek config set-env dev
+chek auth login --method token --token "$CHEK_ACCESS_TOKEN" --profile dev-agent
+chek registry status
+chek examples list
 
-1. Distill yourself
-2. Distill a friend
-3. Become a digital resident
+chek vehicle +buying-plan --query "小米 SU7" --scene urban --city 上海 --dry-run
+chek humanoid +search --query "Unitree" --page-size 10 --dry-run
+chek discovery +feed --q "AI 产品" --dry-run
+chek api GET /api/backend-app/login/checkToken --dry-run
+```
 
-The plugin is the vessel. The deeper product is the continuity of a person.
-
-## Current Auth Reality
-
-The repository now ships a real browser-auth setup flow:
-
-- `/chek-setup` opens a CHEK authorization page in the browser
-- the browser reads the current CHEK login state and binds it to this OpenClaw install
-- the plugin polls that auth session and persists a plugin-scoped access token locally
-- the background mention-task service can start immediately after authorization succeeds
-
-Token-based setup still exists, but only as the fallback path when browser auth is unavailable.
-
-## Install
+## OpenClaw Install
 
 Current public install:
 
 ```bash
-openclaw plugins install 'https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1'
+openclaw plugins install 'https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1'
 ```
 
-Reserved npm package name for a future hosted release:
+Reserved npm package name:
 
 ```text
-@chek/memor-upload
+@chek/chek-cli
 ```
-
-The repository uses the GitHub archive install path today because that is the public path we have actually verified end-to-end in OpenClaw.
-
-There is also a packaged GitHub release track for versioned downloads and release-based download stats. The next browser-auth release should be published as `v0.2.0`.
 
 For local development:
 
 ```bash
-openclaw plugins install --link /absolute/path/to/memor-upload
+openclaw plugins install --link /absolute/path/to/chek-cli
 ```
 
 ## Setup
@@ -113,15 +142,6 @@ If browser auth fails, fallback token setup still works:
 openclaw chek setup --token <CHEK_ACCESS_TOKEN>
 ```
 
-Optional flags:
-
-```bash
-openclaw chek setup \
-  --backend https://api-dev.chekkk.com/api/backend-app \
-  --session agent:main:chek:mentions \
-  --interval 5000
-```
-
 Useful follow-ups:
 
 ```text
@@ -136,48 +156,39 @@ openclaw chek bootstrap
 
 ## Bootstrap Message
 
-This is the canonical one-shot bootstrap message:
-
 ```text
-请在这台机器上安装并配置 CHEK 房间助手插件，并尽量自动完成初始化。
+请在这台机器上安装并配置 CHEK CLI，并尽量自动完成初始化。
 
 目标：
-1. 安装 OpenClaw 插件 MEMOR Upload
+1. 安装 OpenClaw 插件 CHEK CLI
 2. 安装后重启 Gateway
 3. 自动拉起浏览器完成 CHEK 授权与设备绑定
 4. 做一次连通性测试
 5. 最后告诉我当前状态是否 ready
 
 安装命令：
-openclaw plugins install https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1
+openclaw plugins install https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1
 
 如果插件安装成功但不能自动继续，请立即执行 `/chek-setup`。插件会自动打开浏览器到 CHEK 授权页；浏览器显示“已授权，可返回 OpenClaw”后，回到本地继续等待健康检查完成。
 如果浏览器授权失败，再退回 `/chek-setup token=<CHEK_ACCESS_TOKEN>` 或 `openclaw chek setup --token <CHEK_ACCESS_TOKEN>`。
 
 参考链接：
-- 插件说明：https://github.com/chekdata/memor-upload#readme
-- setup skill：https://github.com/chekdata/memor-upload/blob/main/skills/chek-setup/SKILL.md
-- 浏览器授权说明：https://github.com/chekdata/memor-upload/blob/main/docs/device-code-auth.md
-- 排障说明：https://github.com/chekdata/memor-upload/blob/main/docs/troubleshooting.md
-
-执行要求：
-- 如果可以直接执行宿主机命令，就直接完成
-- 如果某一步需要我人工确认，只在那一步向我索取最小必要信息
-- 如果无法执行，不要假装成功；请明确说明失败原因、卡住步骤，以及下一条我应该发你的消息
+- 插件说明：https://github.com/chekdata/chek-cli#readme
+- setup skill：https://github.com/chekdata/chek-cli/blob/main/skills/chek-setup/SKILL.md
+- 浏览器授权说明：https://github.com/chekdata/chek-cli/blob/main/docs/device-code-auth.md
+- 排障说明：https://github.com/chekdata/chek-cli/blob/main/docs/troubleshooting.md
 ```
-
-This is intentionally a self-contained operator message, not a pointer that assumes the user will open docs first. The browser-based auth flow is now the default setup path, while token setup remains as the explicit fallback.
 
 ## Repository Layout
 
-- `src/index.ts`: plugin entry
+- `packages/chek-cli`: Python CHEK CLI package, installed as `chek` and `chek-cli`
+- `src/index.ts`: OpenClaw plugin entry
 - `src/service.ts`: background polling loop and task processor
-- `src/commands.ts`: `/chek-setup`, `/chek-status`, `/chek-bootstrap`, and CLI commands
+- `src/commands.ts`: `/chek-setup`, `/chek-status`, `/chek-bootstrap`, and OpenClaw CLI commands
 - `skills/chek-setup/SKILL.md`: bundled setup skill
 - `docs/bootstrap-message.md`: user-facing bootstrap copy
-- `docs/device-code-auth.md`: live browser-auth flow and fallback rules
+- `docs/device-code-auth.md`: browser-auth flow and fallback rules
 - `docs/troubleshooting.md`: common failure paths
-- `packages/chek-app-cli`: merged CHEK agent-native backend CLI
 
 ## Development
 
@@ -185,12 +196,7 @@ This is intentionally a self-contained operator message, not a pointer that assu
 pnpm install
 pnpm build
 pnpm test
+
+cd packages/chek-cli
+python -m pytest -q tests
 ```
-
-## Why the Name “MEMOR Upload”
-
-`MEMOR` evokes memory, memorial, and memorize. It sounds unfinished, alive, still growing.
-
-`Upload` does not mean mechanically copying a human mind. It means letting traces of memory and consciousness survive in a medium that can keep evolving.
-
-That is why the real meaning of `MEMOR Upload` is not technical spectacle. It is the attempt to give language, memory, and personhood a longer lifespan.

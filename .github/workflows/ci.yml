@@ -33,7 +33,7 @@ jobs:
       - name: Test
         run: pnpm test
 
-  chek-app-cli:
+  chek-cli:
     runs-on: ubuntu-latest
     env:
       CHEK_BACKEND_SAAS_OPENAPI: ${{ secrets.CHEK_BACKEND_SAAS_OPENAPI }}
@@ -47,13 +47,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install CLI
-        working-directory: packages/chek-app-cli
+        working-directory: packages/chek-cli
         run: python -m pip install -e ".[dev]"
 
       - name: Test CLI
-        working-directory: packages/chek-app-cli
+        working-directory: packages/chek-cli
         run: python -m pytest tests -q
 
       - name: Check CLI OpenAPI registry drift
-        working-directory: packages/chek-app-cli
+        working-directory: packages/chek-cli
         run: python scripts/check_registry_drift.py --allow-missing-optional

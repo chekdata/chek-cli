@@ -1,9 +1,9 @@
 ---
-name: "chek-app-cli"
-description: "Operate CHEK app capabilities through an agent-first CLI: config, auth, schema, raw backend API calls, and stable shortcut workflows."
+name: "chek-cli"
+description: "Operate CHEK app capabilities through an agent-first CLI: AI product publication, review rooms, config, auth, schema, raw backend API calls, and stable shortcut workflows."
 ---
 
-# CHEK-APP-CLI
+# CHEK CLI
 
 Use this skill when an agent needs to operate CHEK app functionality through a
 CLI protocol instead of browser clicks. The primary interface is backend API
@@ -22,6 +22,9 @@ python -m pip install -e ".[dev]"
 - Use Lark-style identity switching: `chek --as user ...`, `chek --as service ...`, or `chek config default-as user`.
 - Use `chek registry status` to verify OpenAPI coverage.
 - Use `chek manifest` when an agent needs machine-readable capability discovery.
+- Use `chek ai-product +research-plan` before publishing AI product review rooms.
+- Use `chek ai-product +publish --dry-run` to inspect duplicate-check and publish requests before mutation.
+- Use `chek ai-product +review --dry-run` before submitting ratings and evidence.
 - Use `chek schema <service.resource.method>` before constructing non-trivial request bodies.
 - Prefer generated command trees such as `chek vehicle vehicles batch-search`.
 - Use `chek call <service.resource.method> --dry-run` when the method exists in the registry.
@@ -40,6 +43,10 @@ chek auth status
 chek auth login --method token --token "$CHEK_ACCESS_TOKEN" --profile dev-agent
 chek registry status
 chek manifest --include-operations --operation-limit 20
+chek ai-product +research-plan --category 生产力工具 --product-name Kimi --software-version "2026 年 7 月网页版"
+chek ai-product +duplicate-check --category 具身机器人 --product-name "Unitree G1" --hardware-model EDU --software-version v1.2.4 --dry-run
+chek ai-product +publish --category 生产力工具 --product-name Kimi --software-version "2026 年 7 月网页版" --reason "值得复评长文本能力" --source-url "https://example.com/source" --dry-run
+chek ai-product +review --post-id "<room_uuid>" --stars 4.5 --comment "版本确认后体验稳定" --evidence-url "https://example.com/evidence" --dry-run
 chek schema
 chek schema vehicle.vehicles.batchSearch
 chek vehicle +buying-plan --query "小米 SU7" --scene urban --city 上海 --dry-run

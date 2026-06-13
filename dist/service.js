@@ -5,7 +5,9 @@ import { isConfigured, parseConfig, resolveAccessToken, withConfigPatch, } from 
 import { ensureSession, injectSessionNote, sendChatPrompt, } from "./gateway-cli.js";
 import { buildAutoReplyPrompt, buildFallbackReply, buildReplyStrategy, buildRoomSessionKey, buildRoomSessionLabel, buildTaskInjectionText, extractChatReplyText, selectRoomMessagesForContext, } from "./render.js";
 const SESSION_LABEL = "CHEK Mentions";
-const STATUS_FILE_NAME = "memor-upload-status.json";
+const PLUGIN_CONFIG_KEY = "chek-cli";
+const LEGACY_PLUGIN_CONFIG_KEY = "memor-upload";
+const STATUS_FILE_NAME = "chek-cli-status.json";
 const ROOM_CONTEXT_PAGE_SIZE = 100;
 function nowIso() {
     return new Date().toISOString();
@@ -16,7 +18,7 @@ function summarizeError(error) {
     }
     return String(error);
 }
-export class MemorUploadController {
+export class ChekCliController {
     config;
     logger;
     runtimeConfig;
@@ -102,12 +104,14 @@ export class MemorUploadController {
         const entries = plugins.entries && typeof plugins.entries === "object" && !Array.isArray(plugins.entries)
             ? { ...plugins.entries }
             : {};
-        const existingEntry = entries["memor-upload"] && typeof entries["memor-upload"] === "object"
-            ? entries["memor-upload"]
-            : {};
+        const existingEntry = entries[PLUGIN_CONFIG_KEY] && typeof entries[PLUGIN_CONFIG_KEY] === "object"
+            ? entries[PLUGIN_CONFIG_KEY]
+            : entries[LEGACY_PLUGIN_CONFIG_KEY] && typeof entries[LEGACY_PLUGIN_CONFIG_KEY] === "object"
+                ? entries[LEGACY_PLUGIN_CONFIG_KEY]
+                : {};
         const existingPluginConfig = parseConfig(existingEntry.config);
         const nextPluginConfig = withConfigPatch(existingPluginConfig, patch);
-        entries["memor-upload"] = {
+        entries[PLUGIN_CONFIG_KEY] = {
             ...existingEntry,
             enabled: nextPluginConfig.enabled,
             config: nextPluginConfig,
@@ -168,7 +172,7 @@ export class MemorUploadController {
     }
     injectSessionNoteForKeyBestEffort(sessionKey, message, label) {
         void injectSessionNote(sessionKey, message, label).catch((error) => {
-            this.logger.warn(`[memor-upload] failed to inject ${label} note: ${summarizeError(error)}`);
+            this.logger.warn(`[chek-cli] failed to inject ${label} note: ${summarizeError(error)}`);
         });
     }
     scheduleNext(delayMs) {
@@ -251,7 +255,7 @@ export class MemorUploadController {
         }
         catch (error) {
             this.snapshot.lastError = summarizeError(error);
-            this.logger.error(`[memor-upload] poll failed: ${this.snapshot.lastError}`);
+            this.logger.error(`[chek-cli] poll failed: ${this.snapshot.lastError}`);
             await this.persistSnapshot();
         }
     }
@@ -305,7 +309,7 @@ export class MemorUploadController {
                     });
                 }
                 catch (failError) {
-                    this.logger.error(`[memor-upload] failed to mark task ${task.id} as failed: ${summarizeError(failError)}`);
+                    this.logger.error(`[chek-cli] failed to mark task ${task.id} as failed: ${summarizeError(failError)}`);
                 }
             }
         }
@@ -316,7 +320,7 @@ export class MemorUploadController {
             return selectRoomMessagesForContext(task, messages);
         }
         catch (error) {
-            this.logger.warn(`[memor-upload] failed to load room context for ${postId}: ${summarizeError(error)}`);
+            this.logger.warn(`[chek-cli] failed to load room context for ${postId}: ${summarizeError(error)}`);
             return selectRoomMessagesForContext(task, []);
         }
     }

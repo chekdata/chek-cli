@@ -1,4 +1,4 @@
-import type { ControllerSnapshot, BrowserAuthSession, MemorUploadConfig } from "./types.js";
+import type { ControllerSnapshot, BrowserAuthSession, ChekCliConfig } from "./types.js";
 import type { OpenClawPluginApi } from "./openclaw-types.js";
 type Logger = {
     debug?: (message: string) => void;
@@ -6,7 +6,7 @@ type Logger = {
     warn: (message: string) => void;
     error: (message: string) => void;
 };
-export declare class MemorUploadController {
+export declare class ChekCliController {
     private config;
     private readonly logger;
     private readonly runtimeConfig;
@@ -16,17 +16,17 @@ export declare class MemorUploadController {
     private stateDir;
     private started;
     constructor(params: {
-        config: MemorUploadConfig;
+        config: ChekCliConfig;
         logger: Logger;
         runtimeConfig: OpenClawPluginApi["runtime"]["config"];
     });
     attachStateDir(stateDir: string): void;
     getSnapshot(): ControllerSnapshot;
-    getConfig(): MemorUploadConfig;
+    getConfig(): ChekCliConfig;
     start(): Promise<void>;
     stop(): Promise<void>;
-    updateConfig(config: MemorUploadConfig): Promise<void>;
-    persistConfigPatch(patch: Partial<MemorUploadConfig>): Promise<MemorUploadConfig>;
+    updateConfig(config: ChekCliConfig): Promise<void>;
+    persistConfigPatch(patch: Partial<ChekCliConfig>): Promise<ChekCliConfig>;
     syncAuthorizationSession(): Promise<BrowserAuthSession | null>;
     runHealthCheck(): Promise<{
         backend: string;

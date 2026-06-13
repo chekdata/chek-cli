@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate CHEK-APP-CLI registry from backend OpenAPI specs."""
+"""Generate CHEK CLI registry from backend OpenAPI specs."""
 
 from __future__ import annotations
 
@@ -197,7 +197,7 @@ def fetch_url_with_retries(url: str, attempts: int = 3) -> str:
             url,
             headers={
                 "Accept": "application/json",
-                "User-Agent": "CHEK-APP-CLI-OpenAPI-Generator/0.1",
+                "User-Agent": "CHEK-CLI-OpenAPI-Generator/0.1",
             },
         )
         try:

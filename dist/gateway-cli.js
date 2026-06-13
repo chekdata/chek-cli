@@ -271,7 +271,7 @@ export async function injectSessionNote(sessionKey, message, label) {
     });
 }
 export async function sendChatPrompt(sessionKey, message, options = {}) {
-    const idempotencyKey = `memor-upload-${randomUUID()}`;
+    const idempotencyKey = `chek-cli-${randomUUID()}`;
     const sessionLabel = String(options.sessionLabel || "").trim() || DEFAULT_CHAT_SESSION_LABEL;
     const session = await ensureSession(sessionKey, sessionLabel);
     const started = await gatewayCall("chat.send", {

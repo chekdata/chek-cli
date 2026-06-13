@@ -1,15 +1,16 @@
-# CHEK-APP-CLI
+# CHEK CLI
 
 [English](README.md) | 中文
 
-面向 Agent 的 CHEK 智能汽车与人形机器人数据应用 CLI。
+面向 Agent 的 CHEK 产品提报、评测房间与后端能力 CLI。
 
-CHEK-APP-CLI 不是“打开网页给 Agent 看”的工具，而是把 CHEK App 背后的后端能力变成 Agent 可以直接调用的主入口：查 schema、调用 OpenAPI 自动生成命令、执行高频 shortcut、管理登录态，并在需要时回落到原始 API。
+CHEK CLI 不是“打开网页给 Agent 看”的工具，而是把 CHEK App 背后的后端能力变成 Agent 可以直接调用的主入口：发布 AI 产品评测房间、提交前查重、提交评分与证据、查 schema、调用 OpenAPI 自动生成命令、执行高频 shortcut、管理登录态，并在需要时回落到原始 API。
 
 ## 产品定位
 
-CHEK-APP-CLI 是这些应用形态的 Agent 入口：
+CHEK CLI 是这些应用形态的 Agent 入口：
 
+- AI 产品评测房间：公众提报产品、联网搜索补充资料、版本化查重、评分与持续复评。
 - 买车 OpenClaw：让 Agent 围绕选车、比车、解释推荐、生成行动建议自动编排。
 - AI 版汽车之家：不是人工浏览网页，而是面向 Agent 的车型研究、参数理解、榜单解释和购车决策系统。
 - 懂机帝：围绕汽车、机器人、硬件配置和版本差异的结构化“懂配置”入口。
@@ -56,6 +57,38 @@ chek auth status
 chek auth login --method token --token "$CHEK_ACCESS_TOKEN" --profile dev-agent
 chek registry status
 chek manifest
+
+chek ai-product +research-plan \
+  --category 生产力工具 \
+  --product-name Kimi \
+  --software-version "2026 年 7 月网页版"
+```
+
+AI 产品提报与评测：
+
+```bash
+chek ai-product +duplicate-check \
+  --category 具身机器人 \
+  --product-name "Unitree G1" \
+  --hardware-model EDU \
+  --software-version v1.2.4 \
+  --dry-run
+
+chek ai-product +publish \
+  --category 生产力工具 \
+  --product-name Kimi \
+  --software-version "2026 年 7 月网页版" \
+  --reason "值得复评长文本能力" \
+  --scenario "办公、学习、资料整理" \
+  --source-url "https://example.com/source" \
+  --dry-run
+
+chek ai-product +review \
+  --post-id <room_uuid> \
+  --stars 4.5 \
+  --comment "版本确认后体验稳定" \
+  --evidence-url "https://example.com/evidence" \
+  --dry-run
 ```
 
 智能汽车与榜单：
@@ -99,7 +132,7 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 
 | 层级 | 命令 | 用途 |
 | --- | --- | --- |
-| Shortcut | `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | 给 Agent 的稳定高频工作流 |
+| Shortcut | `ai-product +publish`, `ai-product +review`, `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | 给 Agent 的稳定高频工作流 |
 | OpenAPI 命令树 | `vehicle vehicles batch-search`, `backend-app agent skills-run`, `humanoid robots detail` | 自动生成的服务/资源/方法命令 |
 | API 命令 | `schema`, `call`, `api` | 参数发现、registry 调用、原始路径兜底 |
 | 会话 | `--as auto/user/service/none`, `config default-as`, `auth`, `auth profile`, `auth credential` | 类 Lark 的身份切换、环境、token、profile 与凭证管理 |
@@ -114,7 +147,7 @@ chek registry status
 
 ## 认证
 
-CLI 默认把配置存在 `~/.chek-app-cli`。可以通过 `CHEK_APP_CLI_HOME` 隔离不同 Agent 会话。
+CLI 默认把配置存在 `~/.chek-cli`。可以通过 `CHEK_CLI_HOME` 隔离不同 Agent 会话。
 
 ```bash
 chek config set-env dev
@@ -192,6 +225,6 @@ chek flow smoke --url http://localhost:10086 --retries 10 --interval 2
 打 tag 会通过 GitHub Actions 构建 wheel/sdist。如果配置了 `PYPI_API_TOKEN`，tag release 会自动发布到 PyPI。仓库也提供 Dockerfile：
 
 ```bash
-docker build -t chek-app-cli .
-docker run --rm chek-app-cli manifest
+docker build -t chek-cli .
+docker run --rm chek-cli manifest
 ```

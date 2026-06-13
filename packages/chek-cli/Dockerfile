@@ -5,6 +5,6 @@ COPY . /app
 
 RUN python -m pip install --no-cache-dir -e ".[dev]"
 
-ENV CHEK_APP_CLI_HOME=/config
+ENV CHEK_CLI_HOME=/config
 ENTRYPOINT ["chek"]
 CMD ["manifest"]

@@ -9,7 +9,7 @@ const AUTHORIZATION_WAIT_TIMEOUT_MS = 180_000;
 function formatStatus(controller) {
     const snapshot = controller.getSnapshot();
     return [
-        "MEMOR Upload 状态",
+        "CHEK CLI 状态",
         `- running: ${snapshot.running ? "yes" : "no"}`,
         `- configured: ${snapshot.configured ? "yes" : "no"}`,
         `- backend: ${snapshot.backendAppBaseUrl}`,
@@ -45,7 +45,7 @@ function formatSetupUsage() {
 }
 function summarizeSavedConfig(config) {
     return [
-        "MEMOR Upload 已保存。",
+        "CHEK CLI 已保存。",
         `- backend: ${config.backendAppBaseUrl}`,
         `- session: ${config.sessionKey}`,
         `- installId: ${config.installId || "-"}`,
@@ -132,7 +132,7 @@ async function beginBrowserSetup(controller) {
         deviceId: currentConfig.deviceId,
         sessionKey: currentConfig.sessionKey,
         metadata: {
-            source: "memor-upload",
+            source: "chek-cli",
             setupMode: "browser_auth",
         },
     });
@@ -200,10 +200,10 @@ async function runSetup(controller, patch, opts) {
     }
     return await beginBrowserSetup(controller);
 }
-export function registerMemorUploadCommands(api, controller) {
+export function registerChekCliCommands(api, controller) {
     api.registerCommand({
         name: "chek-setup",
-        description: "Configure MEMOR Upload for CHEK mention-task polling.",
+        description: "Configure CHEK CLI for CHEK mention-task polling.",
         acceptsArgs: true,
         handler: async (ctx) => {
             const rawArgs = ctx.args?.trim() ?? "";
@@ -238,25 +238,25 @@ export function registerMemorUploadCommands(api, controller) {
     });
     api.registerCommand({
         name: "chek-status",
-        description: "Show MEMOR Upload runtime status.",
+        description: "Show CHEK CLI runtime status.",
         handler: async () => ({
             text: formatStatus(controller),
         }),
     });
     api.registerCommand({
         name: "chek-bootstrap",
-        description: "Print the one-shot bootstrap text for MEMOR Upload.",
+        description: "Print the one-shot bootstrap text for CHEK CLI.",
         handler: async () => ({
             text: buildBootstrapMessage(),
         }),
     });
 }
-export function registerMemorUploadCli(program, api, controller) {
+export function registerChekCliProgram(program, api, controller) {
     void api;
-    const chek = program.command("chek").description("MEMOR Upload helpers for CHEK");
+    const chek = program.command("chek").description("CHEK CLI helpers for CHEK");
     chek
         .command("setup")
-        .description("Persist MEMOR Upload config into OpenClaw")
+        .description("Persist CHEK CLI config into OpenClaw")
         .option("--token <token>", "CHEK access token fallback")
         .option("--backend <url>", "CHEK backend-app base URL")
         .option("--session <key>", "Stable local OpenClaw session key")
@@ -283,7 +283,7 @@ export function registerMemorUploadCli(program, api, controller) {
     });
     chek
         .command("status")
-        .description("Print current MEMOR Upload runtime status")
+        .description("Print current CHEK CLI runtime status")
         .action(() => {
         console.log(formatStatus(controller));
     });

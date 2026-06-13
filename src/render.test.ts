@@ -27,7 +27,7 @@ describe("render helpers", () => {
   it("sanitizes reply markers from model text", () => {
     expect(
       sanitizeModelReplyText(
-        "收到，我这就看看。 [[reply_to: memor-upload-e2e-123]]",
+        "收到，我这就看看。 [[reply_to: chek-cli-e2e-123]]",
       ),
     ).toBe("收到，我这就看看。");
     expect(sanitizeModelReplyText("我先看下哈。[[reply_to_current]]")).toBe("我先看下哈。");
@@ -98,7 +98,7 @@ describe("render helpers", () => {
       status: "pending",
       payload: {
         postTitle: "OpenClaw 接入",
-        messageContent: "@你 这次请直接告诉我在这台机器上完成 MEMOR Upload 安装和授权的第一步。",
+        messageContent: "@你 这次请直接告诉我在这台机器上完成 CHEK CLI 安装和授权的第一步。",
       },
       result: {},
     };
@@ -197,7 +197,7 @@ describe("render helpers", () => {
   it("builds bootstrap text", () => {
     const message = buildBootstrapMessage();
     expect(message).toContain(
-      "openclaw plugins install https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1",
+      "openclaw plugins install https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1",
     );
     expect(message).toContain("目标：");
     expect(message).toContain("执行要求：");

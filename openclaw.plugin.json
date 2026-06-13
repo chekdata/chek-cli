@@ -1,7 +1,7 @@
 {
-  "id": "memor-upload",
-  "name": "MEMOR Upload",
-  "description": "Bridge CHEK buddy-room @ mentions into OpenClaw and auto-reply from a stable local session.",
+  "id": "chek-cli",
+  "name": "CHEK CLI",
+  "description": "Agent-native CHEK CLI and OpenClaw helpers for review rooms, AI product publication, and mention handling.",
   "version": "0.2.0",
   "skills": [
     "./skills"

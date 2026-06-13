@@ -27,7 +27,7 @@ import type {
   BuddyRoomMessage,
   ControllerSnapshot,
   BrowserAuthSession,
-  MemorUploadConfig,
+  ChekCliConfig,
   MentionTask,
   ProcessedTaskResult,
 } from "./types.js";
@@ -41,7 +41,9 @@ type Logger = {
 };
 
 const SESSION_LABEL = "CHEK Mentions";
-const STATUS_FILE_NAME = "memor-upload-status.json";
+const PLUGIN_CONFIG_KEY = "chek-cli";
+const LEGACY_PLUGIN_CONFIG_KEY = "memor-upload";
+const STATUS_FILE_NAME = "chek-cli-status.json";
 const ROOM_CONTEXT_PAGE_SIZE = 100;
 
 function nowIso(): string {
@@ -55,8 +57,8 @@ function summarizeError(error: unknown): string {
   return String(error);
 }
 
-export class MemorUploadController {
-  private config: MemorUploadConfig;
+export class ChekCliController {
+  private config: ChekCliConfig;
   private readonly logger: Logger;
   private readonly runtimeConfig: OpenClawPluginApi["runtime"]["config"];
   private readonly snapshot: ControllerSnapshot;
@@ -66,7 +68,7 @@ export class MemorUploadController {
   private started = false;
 
   constructor(params: {
-    config: MemorUploadConfig;
+    config: ChekCliConfig;
     logger: Logger;
     runtimeConfig: OpenClawPluginApi["runtime"]["config"];
   }) {
@@ -104,7 +106,7 @@ export class MemorUploadController {
     return { ...this.snapshot };
   }
 
-  getConfig(): MemorUploadConfig {
+  getConfig(): ChekCliConfig {
     return { ...this.config };
   }
 
@@ -125,7 +127,7 @@ export class MemorUploadController {
     await this.persistSnapshot();
   }
 
-  async updateConfig(config: MemorUploadConfig): Promise<void> {
+  async updateConfig(config: ChekCliConfig): Promise<void> {
     this.config = config;
     this.snapshot.configured = isConfigured(config);
     this.snapshot.backendAppBaseUrl = config.backendAppBaseUrl;
@@ -147,7 +149,7 @@ export class MemorUploadController {
     }
   }
 
-  async persistConfigPatch(patch: Partial<MemorUploadConfig>): Promise<MemorUploadConfig> {
+  async persistConfigPatch(patch: Partial<ChekCliConfig>): Promise<ChekCliConfig> {
     const currentConfig = this.runtimeConfig.loadConfig();
     const plugins = (currentConfig.plugins ?? {}) as Record<string, unknown>;
     const entries =
@@ -155,13 +157,15 @@ export class MemorUploadController {
         ? ({ ...(plugins.entries as Record<string, unknown>) } as Record<string, unknown>)
         : {};
     const existingEntry =
-      entries["memor-upload"] && typeof entries["memor-upload"] === "object"
-        ? (entries["memor-upload"] as Record<string, unknown>)
+      entries[PLUGIN_CONFIG_KEY] && typeof entries[PLUGIN_CONFIG_KEY] === "object"
+        ? (entries[PLUGIN_CONFIG_KEY] as Record<string, unknown>)
+        : entries[LEGACY_PLUGIN_CONFIG_KEY] && typeof entries[LEGACY_PLUGIN_CONFIG_KEY] === "object"
+          ? (entries[LEGACY_PLUGIN_CONFIG_KEY] as Record<string, unknown>)
         : {};
     const existingPluginConfig = parseConfig(existingEntry.config);
     const nextPluginConfig = withConfigPatch(existingPluginConfig, patch);
 
-    entries["memor-upload"] = {
+    entries[PLUGIN_CONFIG_KEY] = {
       ...existingEntry,
       enabled: nextPluginConfig.enabled,
       config: nextPluginConfig,
@@ -188,7 +192,7 @@ export class MemorUploadController {
       baseUrl: this.config.backendAppBaseUrl,
     });
     const session = await api.pollBrowserAuthSession(authSessionId, deviceCode);
-    const patch: Partial<MemorUploadConfig> = {
+    const patch: Partial<ChekCliConfig> = {
       authorizationStatus: String(
         session.authorizationStatus || session.status || this.config.authorizationStatus,
       ).trim(),
@@ -237,7 +241,7 @@ export class MemorUploadController {
   ): void {
     void injectSessionNote(sessionKey, message, label).catch((error) => {
       this.logger.warn(
-        `[memor-upload] failed to inject ${label} note: ${summarizeError(error)}`,
+        `[chek-cli] failed to inject ${label} note: ${summarizeError(error)}`,
       );
     });
   }
@@ -320,7 +324,7 @@ export class MemorUploadController {
       }
     } catch (error) {
       this.snapshot.lastError = summarizeError(error);
-      this.logger.error(`[memor-upload] poll failed: ${this.snapshot.lastError}`);
+      this.logger.error(`[chek-cli] poll failed: ${this.snapshot.lastError}`);
       await this.persistSnapshot();
     }
   }
@@ -390,7 +394,7 @@ export class MemorUploadController {
           });
         } catch (failError) {
           this.logger.error(
-            `[memor-upload] failed to mark task ${task.id} as failed: ${summarizeError(failError)}`,
+            `[chek-cli] failed to mark task ${task.id} as failed: ${summarizeError(failError)}`,
           );
         }
       }
@@ -407,7 +411,7 @@ export class MemorUploadController {
       return selectRoomMessagesForContext(task, messages);
     } catch (error) {
       this.logger.warn(
-        `[memor-upload] failed to load room context for ${postId}: ${summarizeError(error)}`,
+        `[chek-cli] failed to load room context for ${postId}: ${summarizeError(error)}`,
       );
       return selectRoomMessagesForContext(task, []);
     }

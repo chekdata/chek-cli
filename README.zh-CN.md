@@ -1,113 +1,126 @@
-# MEMOR Upload
+# CHEK CLI
 
-![joined](https://img.shields.io/github/downloads/chekdata/memor-upload/total?label=joined)
-![phase](https://img.shields.io/badge/phase-2%20live-0A7D34)
-![license](https://img.shields.io/github/license/chekdata/memor-upload)
+![downloads](https://img.shields.io/github/downloads/chekdata/chek-cli/total?label=downloads)
+![phase](https://img.shields.io/badge/phase-agent%20native-0A7D34)
+![license](https://img.shields.io/github/license/chekdata/chek-cli)
 
-`MEMOR Upload` 是一个关于赛博永生、意识延续、电子居民的公开 OpenClaw 插件项目。
+`CHEK CLI` 是 CHEK 面向 Agent 和开发者的命令行入口。它把 CHEK 后端能力、AI 产品提报、版本化评测房间、发布前查重、评分与证据提交，以及 OpenClaw 房间助手能力，整理成稳定、可脚本化、适合 Agent 调用的 CLI。
 
-它不是单纯把一个人做成会说话的 Bot，也不是只存聊天记录。更大的目标，是把一个人的表达方式、记忆线索、长期偏好、关系结构和行动风格，慢慢蒸馏成一个可以继续存在、继续交流、继续参与世界的数字存在。
+这个仓库原名是 `chekdata/memor-upload`。现在项目名改为 `chek-cli`，标准地址是：
 
-## 这个仓库现在已经能做什么
+```text
+https://github.com/chekdata/chek-cli
+```
 
-这不是一个概念仓库，而是一个已经能跑的 Phase 1 插件：
+## 这个仓库现在包含什么
 
-- 轮询 CHEK 搭子房间里的 `@` mention task
-- 把任务注入本地稳定的 OpenClaw 会话
-- 通过本地 OpenClaw chat loop 自动生成一条简短回复
-- 回发到 CHEK 房间
-- 把 task 标记为 `completed` 或 `failed`
-- 同时提供已经合并进来的 CHEK Agent-native App CLI：`packages/chek-app-cli`
+- `packages/chek-cli`：Python Agent-native CLI，安装后提供 `chek` 和 `chek-cli`
+- CHEK 后端服务的 OpenAPI 自动命令树
+- 智能汽车、具身机器人、发现流、分享、MiControl、AI 产品评测房间的高频 shortcut
+- 浏览器授权 / token 授权，以及类似 Lark CLI 的 `--as auto/user/service/none` 身份切换
+- OpenClaw 插件 helper：支持 CHEK setup、房间 `@` mention 同步和自动回复
+- 面向 Agent 安装、授权、排障的 skill 与 docs
 
-也就是说，在“蒸馏自己 / 蒸馏朋友 / 成为电子居民”的更长期目标完全实现之前，这个仓库本身已经是一条可安装、可调试、可联调的真实产品链路。
+## AI 产品评测房间
 
-## CHEK App CLI
+新的 AI 产品流程是：
 
-`CHEK-APP-CLI` 现在已经迁入本仓库，位置是
-[`packages/chek-app-cli`](./packages/chek-app-cli)。它是 CHEK 智能汽车与人形机器人数据应用的 Agent-native CLI 主入口：
+```text
+公众提报产品 -> 所有用户评审 -> 达到 5 位追日靴有效评分 -> 公开评分 -> 持续复评更新
+```
 
-- 买车 OpenClaw 与 AI 版汽车之家式 workflow
-- 智能汽车数据库、榜单、车型对比命令
-- 机器人数据库与人形机器人配置数据命令
-- 类 Lark 的 `--as auto/user/service/none` 身份切换
-- OpenAPI 自动命令树、examples、manifest、smoke checks
+Agent 可以先用 CLI 生成提报前的联网搜索计划：
+
+```bash
+cd packages/chek-cli
+python -m pip install -e ".[dev]"
+
+chek ai-product +research-plan \
+  --category 生产力工具 \
+  --product-name Kimi \
+  --software-version "2026 年 7 月网页版"
+```
+
+这个命令会返回：
+
+- 建议搜索的关键词
+- 应收集的资料类型
+- 提交前查重所需的 payload
+- 如果命中重复，应该进入已有房间继续评测的提示
+
+Agent 完成联网搜索、补齐资料后，再发布：
+
+```bash
+chek ai-product +publish \
+  --category 生产力工具 \
+  --product-name Kimi \
+  --software-version "2026 年 7 月网页版" \
+  --tag 长文本 \
+  --reason "值得复评长文本能力" \
+  --scenario "办公、学习、资料整理" \
+  --source-url "https://example.com/source" \
+  --dry-run
+```
+
+`+publish` 默认会先调用查重接口。如果相同的 `类别 + 产品名 + 硬件型号 + 软件版本` 已经存在，CLI 会停止发布，并把已有房间候选返回给 Agent；除非明确使用 `--duplicate-policy allow`。
+
+提交评分与评测证据：
+
+```bash
+chek ai-product +review \
+  --post-id <room_uuid> \
+  --stars 4.5 \
+  --comment "长文本总结稳定，版本已确认" \
+  --evidence "附测试记录和截图链接" \
+  --evidence-url "https://example.com/evidence"
+```
+
+纯软件产品可以不填 `--hardware-model`，但 `--software-version` 必填，因为 AI 产品评分必须锚定到某个具体版本。
+
+## CHEK CLI 常用命令
 
 本地开发：
 
 ```bash
-cd packages/chek-app-cli
+cd packages/chek-cli
 python -m pip install -e ".[dev]"
 chek manifest
 chek smoke api --dry-run
 ```
 
-## 更长期的 3 条主线
-
-`MEMOR Upload` 现在围绕 3 条主线继续推进：
-
-1. 蒸馏自己
-2. 蒸馏朋友
-3. 成为电子居民
-
-插件只是载体。更大的产品，是一个人的连续性。
-
-## 当前授权口径
-
-现在已经不是“只有 token setup”的阶段了。
-
-当前仓库已经有真实可跑的浏览器授权链路：
-
-- `/chek-setup` 会自动拉起浏览器
-- 浏览器页会读取当前 CHEK 登录态，并把它绑定到这台 OpenClaw 设备
-- 插件会轮询授权状态，并把 plugin-scoped access token 落到本地配置
-- 授权完成后，后台 mention-task service 就可以直接开始
-
-token setup 仍然保留，但只作为浏览器授权失败时的兜底方式。
-
-默认 setup 方式：
-
-```text
-/chek-setup
-```
-
-或者：
+常用示例：
 
 ```bash
-openclaw chek setup
+chek config show
+chek config set-env dev
+chek auth login --method token --token "$CHEK_ACCESS_TOKEN" --profile dev-agent
+chek registry status
+chek examples list
+
+chek vehicle +buying-plan --query "小米 SU7" --scene urban --city 上海 --dry-run
+chek humanoid +search --query "Unitree" --page-size 10 --dry-run
+chek discovery +feed --q "AI 产品" --dry-run
+chek api GET /api/backend-app/login/checkToken --dry-run
 ```
 
-浏览器授权失败时的兜底方式：
-
-```text
-/chek-setup token=<CHEK_ACCESS_TOKEN>
-```
-
-```bash
-openclaw chek setup --token <CHEK_ACCESS_TOKEN>
-```
-
-## 安装
+## OpenClaw 安装
 
 当前公开可用的安装方式：
 
 ```bash
-openclaw plugins install 'https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1'
+openclaw plugins install 'https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1'
 ```
 
-未来 npm 托管发布时保留的包名：
+预留 npm 包名：
 
 ```text
-@chek/memor-upload
+@chek/chek-cli
 ```
-
-当前文档默认使用 GitHub archive 安装，是因为这才是我们已经在 OpenClaw 里真实验证通过的公开分发口径。
-
-仓库也保留 GitHub release 作为版本化下载与统计入口；这次浏览器授权版本会对应新的 `v0.2.0` release。
 
 本地开发联调：
 
 ```bash
-openclaw plugins install --link /absolute/path/to/memor-upload
+openclaw plugins install --link /absolute/path/to/chek-cli
 ```
 
 ## 配置
@@ -124,13 +137,14 @@ openclaw plugins install --link /absolute/path/to/memor-upload
 openclaw chek setup
 ```
 
-常用可选项：
+浏览器授权失败时的兜底方式：
+
+```text
+/chek-setup token=<CHEK_ACCESS_TOKEN>
+```
 
 ```bash
-openclaw chek setup \
-  --backend https://api-dev.chekkk.com/api/backend-app \
-  --session agent:main:chek:mentions \
-  --interval 5000
+openclaw chek setup --token <CHEK_ACCESS_TOKEN>
 ```
 
 辅助命令：
@@ -147,48 +161,39 @@ openclaw chek bootstrap
 
 ## 一段式 bootstrap message
 
-当前仓库的标准 bootstrap message 是：
-
 ```text
-请在这台机器上安装并配置 CHEK 房间助手插件，并尽量自动完成初始化。
+请在这台机器上安装并配置 CHEK CLI，并尽量自动完成初始化。
 
 目标：
-1. 安装 OpenClaw 插件 MEMOR Upload
+1. 安装 OpenClaw 插件 CHEK CLI
 2. 安装后重启 Gateway
 3. 自动拉起浏览器完成 CHEK 授权与设备绑定
 4. 做一次连通性测试
 5. 最后告诉我当前状态是否 ready
 
 安装命令：
-openclaw plugins install https://github.com/chekdata/memor-upload/archive/refs/heads/main.tar.gz?download=1
+openclaw plugins install https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1
 
 如果插件安装成功但不能自动继续，请立即执行 `/chek-setup`。插件会自动打开浏览器到 CHEK 授权页；浏览器显示“已授权，可返回 OpenClaw”后，回到本地继续等待健康检查完成。
 如果浏览器授权失败，再退回 `/chek-setup token=<CHEK_ACCESS_TOKEN>` 或 `openclaw chek setup --token <CHEK_ACCESS_TOKEN>`。
 
 参考链接：
-- 插件说明：https://github.com/chekdata/memor-upload#readme
-- setup skill：https://github.com/chekdata/memor-upload/blob/main/skills/chek-setup/SKILL.md
-- 浏览器授权说明：https://github.com/chekdata/memor-upload/blob/main/docs/device-code-auth.md
-- 排障说明：https://github.com/chekdata/memor-upload/blob/main/docs/troubleshooting.md
-
-执行要求：
-- 如果可以直接执行宿主机命令，就直接完成
-- 如果某一步需要我人工确认，只在那一步向我索取最小必要信息
-- 如果无法执行，不要假装成功；请明确说明失败原因、卡住步骤，以及下一条我应该发你的消息
+- 插件说明：https://github.com/chekdata/chek-cli#readme
+- setup skill：https://github.com/chekdata/chek-cli/blob/main/skills/chek-setup/SKILL.md
+- 浏览器授权说明：https://github.com/chekdata/chek-cli/blob/main/docs/device-code-auth.md
+- 排障说明：https://github.com/chekdata/chek-cli/blob/main/docs/troubleshooting.md
 ```
-
-这条消息现在就是产品主入口本身，不是“先读文档再自己研究”的辅助说明。浏览器授权已经是默认 setup 主路径，token setup 则保留为明确的兜底回退。
 
 ## 仓库结构
 
-- `src/index.ts`：插件入口
+- `packages/chek-cli`：Python CHEK CLI 包，安装后提供 `chek` 和 `chek-cli`
+- `src/index.ts`：OpenClaw 插件入口
 - `src/service.ts`：后台轮询和 task 处理
-- `src/commands.ts`：`/chek-setup`、`/chek-status`、`/chek-bootstrap` 和 CLI 命令
+- `src/commands.ts`：`/chek-setup`、`/chek-status`、`/chek-bootstrap` 和 OpenClaw CLI 命令
 - `skills/chek-setup/SKILL.md`：随插件一起发的 setup skill
 - `docs/bootstrap-message.md`：面向用户的一段式引导文案
-- `docs/device-code-auth.md`：当前可用的浏览器授权链路和 fallback 规则
+- `docs/device-code-auth.md`：浏览器授权链路和 fallback 规则
 - `docs/troubleshooting.md`：排障说明
-- `packages/chek-app-cli`：合并进来的 CHEK Agent-native 后端 CLI
 
 ## 开发
 
@@ -196,12 +201,7 @@ openclaw plugins install https://github.com/chekdata/memor-upload/archive/refs/h
 pnpm install
 pnpm build
 pnpm test
+
+cd packages/chek-cli
+python -m pytest -q tests
 ```
-
-## 为什么叫 MEMOR Upload
-
-`MEMOR` 同时让人想到 memory、memorial、memorize，也像是一种还没完全定型、但仍在生长的记忆体。
-
-`Upload` 也不是机械地把一个人“复制上去”。它真正指向的是：把记忆、语言、关系和意识痕迹，上传到一个可以持续演化、持续存在的系统里。
-
-所以 `MEMOR Upload` 的寓意不是技术炫技，而是试图让一个人的存在感，拥有更长的寿命。

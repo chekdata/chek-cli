@@ -1,10 +1,10 @@
-# MEMOR Upload Browser Auth
+# CHEK CLI Browser Auth
 
 ## Current Reality
 
 This flow is now implemented.
 
-`MEMOR Upload` no longer depends on token-only setup as the primary path. The default setup path is:
+`CHEK CLI` does not depend on token-only setup as the primary path. The default setup path is:
 
 1. install the plugin
 2. run `/chek-setup` or `openclaw chek setup`

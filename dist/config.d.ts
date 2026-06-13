@@ -1,8 +1,8 @@
-import type { MemorUploadConfig } from "./types.js";
+import type { ChekCliConfig } from "./types.js";
 export declare const DEFAULT_BACKEND_APP_BASE_URL = "https://api-dev.chekkk.com/api/backend-app";
 export declare const DEFAULT_POLL_INTERVAL_MS = 5000;
 export declare const DEFAULT_SESSION_KEY = "agent:main:chek:mentions";
-export declare const ACCESS_TOKEN_ENV_NAMES: readonly ["CHEK_ACCESS_TOKEN", "CHEK_MEMOR_ACCESS_TOKEN"];
+export declare const ACCESS_TOKEN_ENV_NAMES: readonly ["CHEK_ACCESS_TOKEN", "CHEK_CLI_ACCESS_TOKEN", "CHEK_MEMOR_ACCESS_TOKEN"];
 export declare const CONFIG_JSON_SCHEMA: {
     readonly type: "object";
     readonly additionalProperties: false;
@@ -104,8 +104,8 @@ export declare const CONFIG_UI_HINTS: {
     };
 };
 export declare function normalizeBackendAppBaseUrl(value: string): string;
-export declare function parseConfig(value: unknown): MemorUploadConfig;
-export declare function resolveAccessToken(config: MemorUploadConfig): string;
-export declare function withConfigPatch(baseConfig: MemorUploadConfig, patch: Partial<MemorUploadConfig>): MemorUploadConfig;
-export declare function isConfigured(config: MemorUploadConfig): boolean;
+export declare function parseConfig(value: unknown): ChekCliConfig;
+export declare function resolveAccessToken(config: ChekCliConfig): string;
+export declare function withConfigPatch(baseConfig: ChekCliConfig, patch: Partial<ChekCliConfig>): ChekCliConfig;
+export declare function isConfigured(config: ChekCliConfig): boolean;
 export declare function maskToken(token: string): string;

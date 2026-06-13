@@ -1,4 +1,4 @@
-"""Agent-first CLI harness for CHEK-APP-CLI."""
+"""Agent-first CLI harness for CHEK CLI."""
 
 from __future__ import annotations
 
@@ -10,6 +10,15 @@ from pathlib import Path
 import click
 
 from . import __version__
+from .ai_product import (
+    AI_PRODUCT_CATEGORIES,
+    AI_PRODUCT_INTEREST_RELATIONS,
+    build_publish_payload,
+    build_research_plan,
+    build_review_payload,
+    duplicate_check_payload,
+    product_from_inputs,
+)
 from .api_core import (
     ENV_ORIGINS,
     IDENTITY_CHOICES,
@@ -99,7 +108,7 @@ def fail(command: str, exc: Exception, as_json: bool) -> None:
 @click.version_option(__version__)
 @click.pass_context
 def main(ctx: click.Context, as_json: bool, output_format: str, identity: str | None, repo: Path | None) -> None:
-    """CHEK-APP-CLI agent-native interface for CHEK backend capabilities."""
+    """CHEK CLI agent-native interface for CHEK backend capabilities."""
     ctx.ensure_object(dict)
     ctx.obj["json"] = as_json or output_format == "json"
     ctx.obj["format"] = "json" if as_json else output_format
@@ -111,9 +120,9 @@ def main(ctx: click.Context, as_json: bool, output_format: str, identity: str | 
                 True,
                 "help",
                 data={
-                    "message": "Agent-first CHEK CLI. Start with: config show, auth status, schema, api, vehicle +search.",
+                    "message": "Agent-first CHEK CLI. Start with: config show, auth status, schema, api, ai-product +research-plan.",
                     "layers": [
-                        "shortcuts: vehicle +search, discovery +feed, share +resolve",
+                        "shortcuts: ai-product +publish/+review, vehicle +search, discovery +feed, share +resolve",
                         "schema/API commands: schema, call service.resource.method, api METHOD PATH",
                         "auth identity: --as auto|user|service|none, config default-as",
                         "auxiliary dev commands: routes, serve, build, page, flow",
@@ -124,6 +133,9 @@ def main(ctx: click.Context, as_json: bool, output_format: str, identity: str | 
                         "schema",
                         "call vehicle.vehicles.batchSearch --data '{...}' --dry-run",
                         "api GET /api/backend-app/login/checkToken --dry-run",
+                        "ai-product +research-plan --category 生产力工具 --product-name Kimi --software-version '2026 年 7 月网页版'",
+                        "ai-product +publish --category 生产力工具 --product-name Kimi --software-version '2026 年 7 月网页版' --reason '值得测' --dry-run",
+                        "ai-product +review --post-id <uuid> --stars 4 --comment '体验稳定' --dry-run",
                         "vehicle +search --query '小米 SU7' --dry-run",
                     ],
                 },
@@ -444,6 +456,22 @@ CURATED_EXAMPLES = [
         "description": "Compare humanoid robot details and configuration version snapshots.",
         "command": "chek humanoid +compare --id robot_1 --id robot_2 --include-configs --dry-run",
         "schemaPaths": ["humanoid.robots.detail", "humanoid.robots.configVersions"],
+    },
+    {
+        "name": "ai-product.publish",
+        "domain": "ai-product",
+        "positioning": ["AI 产品提报", "公众提报产品", "版本化评测房间"],
+        "description": "Research, duplicate-check, and publish an AI product review room.",
+        "command": "chek ai-product +publish --category 生产力工具 --product-name Kimi --software-version '2026 年 7 月网页版' --reason '值得复评长文本能力' --dry-run",
+        "schemaPaths": ["backend-app.buddy.postsPost", "backend-app.buddy.posts"],
+    },
+    {
+        "name": "ai-product.review",
+        "domain": "ai-product",
+        "positioning": ["AI 产品评测", "追日靴评分", "证据化复评"],
+        "description": "Submit a star rating and review evidence for an AI product room.",
+        "command": "chek ai-product +review --post-id <uuid> --stars 4.5 --comment '长文本总结稳定' --evidence '附测试记录链接' --dry-run",
+        "schemaPaths": ["backend-app.buddy.postsMessages", "backend-app.buddy.postsGet"],
     },
 ]
 
@@ -1092,7 +1120,7 @@ def registry_status(ctx: click.Context) -> None:
 def manifest_cmd(ctx: click.Context, include_operations: bool, operation_limit: int) -> None:
     """Emit an agent-native capability manifest."""
     data = {
-        "name": "CHEK-APP-CLI",
+        "name": "CHEK CLI",
         "version": __version__,
         "defaultOutput": "json",
         "identityModel": {
@@ -1110,6 +1138,15 @@ def manifest_cmd(ctx: click.Context, include_operations: bool, operation_limit: 
             "config": ["config show", "config set-env", "config set-origin", "config default-as", "config secret-store"],
             "auth": ["auth login", "auth status", "auth check", "auth scopes", "auth profile", "auth credential"],
             "api": ["schema", "call", "api", "examples", "smoke api"],
+            "aiProduct": [
+                "ai-product +research-plan",
+                "ai-product +duplicate-check",
+                "ai-product +publish",
+                "ai-product +edit",
+                "ai-product +review",
+                "ai-product +list",
+                "ai-product +detail",
+            ],
             "workflows": [item["command"] for item in CURATED_EXAMPLES],
         },
         "registry": registry_operation_manifest(include_operations, limit=operation_limit),
@@ -1292,6 +1329,541 @@ def smoke_auth(ctx: click.Context, timeout: int, dry_run: bool) -> None:
         if isinstance(exc, SystemExit):
             raise
         fail("smoke auth", exc, ctx.obj["json"])
+
+
+@main.group("ai-product")
+def ai_product() -> None:
+    """AI product publication, duplicate-check, and review shortcuts."""
+
+
+def build_ai_product_from_options(
+    *,
+    from_file: Path | None,
+    category: str | None,
+    product_name: str | None,
+    hardware_model: str | None,
+    software_version: str | None,
+    tags: tuple[str, ...],
+) -> tuple[dict, dict]:
+    raw_payload = parse_json_arg(from_file.read_text(encoding="utf-8"), flag_name="--from-file") if from_file else {}
+    if raw_payload is None:
+        raw_payload = {}
+    if not isinstance(raw_payload, dict):
+        raise HarnessError("--from-file must contain a JSON object.")
+    product = product_from_inputs(
+        category=category,
+        product_name=product_name,
+        hardware_model=hardware_model,
+        software_version=software_version,
+        tags=tags,
+        payload=raw_payload,
+    )
+    return product, raw_payload
+
+
+def emit_duplicate_block(
+    ctx: click.Context,
+    *,
+    command: str,
+    product: dict,
+    duplicate_result: dict,
+    publish_payload: dict | None = None,
+) -> None:
+    emit(
+        CommandResult(
+            False,
+            command,
+            data={
+                "blockedByDuplicate": True,
+                "product": product,
+                "duplicateCheck": duplicate_result,
+                "publishPayload": publish_payload,
+                "agentGuidance": [
+                    "进入 matchedPost/candidates 里的已有房间继续评测。",
+                    "只有确认不是同一硬件型号 + 软件版本时，才改产品身份后重新发布。",
+                    "确需重复发布时可显式使用 --duplicate-policy allow。",
+                ],
+            },
+            errors=["Duplicate AI product review room found; publish was not executed."],
+        ),
+        ctx.obj["json"],
+    )
+    raise SystemExit(1)
+
+
+@ai_product.command("+research-plan")
+@click.option("--from-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="JSON draft to enrich.")
+@click.option("--category", type=click.Choice(AI_PRODUCT_CATEGORIES), default=None)
+@click.option("--product-name", default=None)
+@click.option("--hardware-model", default=None)
+@click.option("--software-version", default=None)
+@click.option("--tag", "tags", multiple=True, help="Product/entity tag. Repeatable or comma-separated.")
+@click.pass_context
+def ai_product_research_plan(
+    ctx: click.Context,
+    from_file: Path | None,
+    category: str | None,
+    product_name: str | None,
+    hardware_model: str | None,
+    software_version: str | None,
+    tags: tuple[str, ...],
+) -> None:
+    """Build the web-search and duplicate-check plan an agent should run before publishing."""
+    as_json = ctx.obj["json"]
+    try:
+        product, raw_payload = build_ai_product_from_options(
+            from_file=from_file,
+            category=category,
+            product_name=product_name,
+            hardware_model=hardware_model,
+            software_version=software_version,
+            tags=tags,
+        )
+        emit(
+            CommandResult(
+                True,
+                "ai-product +research-plan",
+                data={
+                    "product": product,
+                    "inputPayload": raw_payload,
+                    "researchPlan": build_research_plan(product),
+                    "nextCliCommands": [
+                        "chek ai-product +duplicate-check ...",
+                        "chek ai-product +publish --source-url <url> --reason <why> ...",
+                        "chek ai-product +review --post-id <uuid> --stars <1-5> --evidence <text>",
+                    ],
+                },
+            ),
+            as_json,
+        )
+    except Exception as exc:
+        fail("ai-product +research-plan", exc, as_json)
+
+
+@ai_product.command("+duplicate-check")
+@click.option("--from-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None)
+@click.option("--category", type=click.Choice(AI_PRODUCT_CATEGORIES), default=None)
+@click.option("--product-name", default=None)
+@click.option("--hardware-model", default=None)
+@click.option("--software-version", default=None)
+@click.option("--tag", "tags", multiple=True)
+@click.option("--exclude-post-id", default=None, help="Exclude this post when checking an edit.")
+@click.option("--timeout", type=int, default=30, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def ai_product_duplicate_check(
+    ctx: click.Context,
+    from_file: Path | None,
+    category: str | None,
+    product_name: str | None,
+    hardware_model: str | None,
+    software_version: str | None,
+    tags: tuple[str, ...],
+    exclude_post_id: str | None,
+    timeout: int,
+    dry_run: bool,
+) -> None:
+    """Check whether an AI product version has already been submitted."""
+    try:
+        product, _ = build_ai_product_from_options(
+            from_file=from_file,
+            category=category,
+            product_name=product_name,
+            hardware_model=hardware_model,
+            software_version=software_version,
+            tags=tags,
+        )
+        result = request_api(
+            "POST",
+            "/api/backend-app/buddy/v1/posts/duplicate-check",
+            data=duplicate_check_payload(product, exclude_post_id=exclude_post_id),
+            auth=True,
+            identity=request_identity(ctx),
+            timeout=timeout,
+            dry_run=dry_run,
+        )
+        emit_api(ctx, "ai-product +duplicate-check", result)
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("ai-product +duplicate-check", exc, ctx.obj["json"])
+
+
+@ai_product.command("+publish")
+@click.option("--from-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="JSON draft. CLI flags override matching fields.")
+@click.option("--category", type=click.Choice(AI_PRODUCT_CATEGORIES), default=None)
+@click.option("--product-name", default=None)
+@click.option("--hardware-model", default=None, help="Optional for pure software products.")
+@click.option("--software-version", default=None, help="Required; AI product scores are version-specific.")
+@click.option("--tag", "tags", multiple=True)
+@click.option("--reason", default="")
+@click.option("--scenario", default="")
+@click.option("--evidence", default="")
+@click.option("--evidence-url", "evidence_urls", multiple=True)
+@click.option("--source-url", "source_urls", multiple=True, help="Web source collected by the agent before publish.")
+@click.option("--source-title", "source_titles", multiple=True)
+@click.option("--interest-relation", type=click.Choice(AI_PRODUCT_INTEREST_RELATIONS), default="普通用户", show_default=True)
+@click.option("--cover-image-url", default="")
+@click.option("--media-type", default="image", show_default=True)
+@click.option("--media-url", default="")
+@click.option("--target-id", default="")
+@click.option("--opening-message", default="")
+@click.option("--duplicate-policy", type=click.Choice(["stop", "allow"]), default="stop", show_default=True)
+@click.option("--check-duplicate/--no-check-duplicate", default=True, show_default=True)
+@click.option("--require-source/--no-require-source", default=False, show_default=True)
+@click.option("--timeout", type=int, default=30, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def ai_product_publish(
+    ctx: click.Context,
+    from_file: Path | None,
+    category: str | None,
+    product_name: str | None,
+    hardware_model: str | None,
+    software_version: str | None,
+    tags: tuple[str, ...],
+    reason: str,
+    scenario: str,
+    evidence: str,
+    evidence_urls: tuple[str, ...],
+    source_urls: tuple[str, ...],
+    source_titles: tuple[str, ...],
+    interest_relation: str,
+    cover_image_url: str,
+    media_type: str,
+    media_url: str,
+    target_id: str,
+    opening_message: str,
+    duplicate_policy: str,
+    check_duplicate: bool,
+    require_source: bool,
+    timeout: int,
+    dry_run: bool,
+) -> None:
+    """Publish an AI product review room after research and duplicate-check."""
+    try:
+        product, raw_payload = build_ai_product_from_options(
+            from_file=from_file,
+            category=category,
+            product_name=product_name,
+            hardware_model=hardware_model,
+            software_version=software_version,
+            tags=tags,
+        )
+        if require_source and not any([source_urls, evidence_urls, evidence]):
+            emit(
+                CommandResult(
+                    False,
+                    "ai-product +publish",
+                    data={"product": product, "researchPlan": build_research_plan(product)},
+                    errors=["No source/evidence was provided; run the research plan first or pass --no-require-source."],
+                ),
+                ctx.obj["json"],
+            )
+            raise SystemExit(1)
+        publish_payload = build_publish_payload(
+            product=product,
+            reason=reason,
+            scenario=scenario,
+            evidence=evidence,
+            evidence_urls=evidence_urls,
+            interest_relation=interest_relation,
+            source_urls=source_urls,
+            source_titles=source_titles,
+            cover_image_url=cover_image_url,
+            media_type=media_type,
+            media_url=media_url,
+            target_id=target_id,
+            opening_message=opening_message,
+            payload=raw_payload,
+        )
+        duplicate_result = None
+        if check_duplicate:
+            duplicate_result = request_api(
+                "POST",
+                "/api/backend-app/buddy/v1/posts/duplicate-check",
+                data=duplicate_check_payload(product),
+                auth=True,
+                identity=request_identity(ctx),
+                timeout=timeout,
+                dry_run=dry_run,
+            )
+            duplicate_data = duplicate_result.get("data") if isinstance(duplicate_result, dict) else {}
+            if (
+                not dry_run
+                and duplicate_policy == "stop"
+                and bool(duplicate_result.get("ok"))
+                and isinstance(duplicate_data, dict)
+                and duplicate_data.get("duplicate")
+            ):
+                emit_duplicate_block(
+                    ctx,
+                    command="ai-product +publish",
+                    product=product,
+                    duplicate_result=duplicate_result,
+                    publish_payload=publish_payload,
+                )
+        publish_result = request_api(
+            "POST",
+            "/api/backend-app/buddy/v1/posts",
+            data=publish_payload,
+            auth=True,
+            identity=request_identity(ctx),
+            timeout=timeout,
+            dry_run=dry_run,
+        )
+        ok = bool(publish_result.get("ok")) and (not duplicate_result or bool(duplicate_result.get("ok")))
+        emit(
+            CommandResult(
+                ok,
+                "ai-product +publish",
+                data={
+                    "dryRun": dry_run,
+                    "product": product,
+                    "researchPlan": build_research_plan(product),
+                    "duplicateCheck": duplicate_result,
+                    "publish": publish_result,
+                },
+                errors=[] if ok else ["AI product publish failed."],
+            ),
+            ctx.obj["json"],
+        )
+        if not ok:
+            raise SystemExit(1)
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("ai-product +publish", exc, ctx.obj["json"])
+
+
+@ai_product.command("+edit")
+@click.option("--post-id", required=True)
+@click.option("--from-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None)
+@click.option("--category", type=click.Choice(AI_PRODUCT_CATEGORIES), default=None)
+@click.option("--product-name", default=None)
+@click.option("--hardware-model", default=None)
+@click.option("--software-version", default=None)
+@click.option("--tag", "tags", multiple=True)
+@click.option("--reason", default="")
+@click.option("--scenario", default="")
+@click.option("--evidence", default="")
+@click.option("--evidence-url", "evidence_urls", multiple=True)
+@click.option("--source-url", "source_urls", multiple=True)
+@click.option("--source-title", "source_titles", multiple=True)
+@click.option("--interest-relation", type=click.Choice(AI_PRODUCT_INTEREST_RELATIONS), default="普通用户", show_default=True)
+@click.option("--cover-image-url", default="")
+@click.option("--media-type", default="image", show_default=True)
+@click.option("--media-url", default="")
+@click.option("--opening-message", default="")
+@click.option("--check-duplicate/--no-check-duplicate", default=True, show_default=True)
+@click.option("--timeout", type=int, default=30, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def ai_product_edit(
+    ctx: click.Context,
+    post_id: str,
+    from_file: Path | None,
+    category: str | None,
+    product_name: str | None,
+    hardware_model: str | None,
+    software_version: str | None,
+    tags: tuple[str, ...],
+    reason: str,
+    scenario: str,
+    evidence: str,
+    evidence_urls: tuple[str, ...],
+    source_urls: tuple[str, ...],
+    source_titles: tuple[str, ...],
+    interest_relation: str,
+    cover_image_url: str,
+    media_type: str,
+    media_url: str,
+    opening_message: str,
+    check_duplicate: bool,
+    timeout: int,
+    dry_run: bool,
+) -> None:
+    """Edit an AI product room. Changing product identity should create a new room instead."""
+    try:
+        product, raw_payload = build_ai_product_from_options(
+            from_file=from_file,
+            category=category,
+            product_name=product_name,
+            hardware_model=hardware_model,
+            software_version=software_version,
+            tags=tags,
+        )
+        publish_payload = build_publish_payload(
+            product=product,
+            reason=reason,
+            scenario=scenario,
+            evidence=evidence,
+            evidence_urls=evidence_urls,
+            interest_relation=interest_relation,
+            source_urls=source_urls,
+            source_titles=source_titles,
+            cover_image_url=cover_image_url,
+            media_type=media_type,
+            media_url=media_url,
+            opening_message=opening_message,
+            payload=raw_payload,
+        )
+        duplicate_result = None
+        if check_duplicate:
+            duplicate_result = request_api(
+                "POST",
+                "/api/backend-app/buddy/v1/posts/duplicate-check",
+                data=duplicate_check_payload(product, exclude_post_id=post_id),
+                auth=True,
+                identity=request_identity(ctx),
+                timeout=timeout,
+                dry_run=dry_run,
+            )
+        edit_result = request_api(
+            "PATCH",
+            f"/api/backend-app/buddy/v1/posts/{quote_path_value(post_id)}",
+            data=publish_payload,
+            auth=True,
+            identity=request_identity(ctx),
+            timeout=timeout,
+            dry_run=dry_run,
+        )
+        ok = bool(edit_result.get("ok")) and (not duplicate_result or bool(duplicate_result.get("ok")))
+        emit(
+            CommandResult(
+                ok,
+                "ai-product +edit",
+                data={
+                    "dryRun": dry_run,
+                    "product": product,
+                    "identityChangePolicy": "Backend rejects product identity changes; create a new room for a new hardware/software version.",
+                    "duplicateCheck": duplicate_result,
+                    "edit": edit_result,
+                },
+                errors=[] if ok else ["AI product edit failed."],
+            ),
+            ctx.obj["json"],
+        )
+        if not ok:
+            raise SystemExit(1)
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("ai-product +edit", exc, ctx.obj["json"])
+
+
+@ai_product.command("+review")
+@click.option("--post-id", required=True)
+@click.option("--rating", type=float, default=None, help="0-10 score. Mutually replaceable with --stars.")
+@click.option("--stars", type=float, default=None, help="Douban-style 0.5-5 star score.")
+@click.option("--comment", default="")
+@click.option("--evidence", default="")
+@click.option("--evidence-url", "evidence_urls", multiple=True)
+@click.option("--interest-relation", type=click.Choice(AI_PRODUCT_INTEREST_RELATIONS), default="普通用户", show_default=True)
+@click.option("--tested-version-confirmed/--version-not-confirmed", default=True, show_default=True)
+@click.option("--timeout", type=int, default=30, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def ai_product_review(
+    ctx: click.Context,
+    post_id: str,
+    rating: float | None,
+    stars: float | None,
+    comment: str,
+    evidence: str,
+    evidence_urls: tuple[str, ...],
+    interest_relation: str,
+    tested_version_confirmed: bool,
+    timeout: int,
+    dry_run: bool,
+) -> None:
+    """Submit or update the current user's rating and review evidence."""
+    try:
+        body = build_review_payload(
+            rating=rating,
+            stars=stars,
+            comment=comment,
+            evidence_text=evidence,
+            evidence_urls=evidence_urls,
+            interest_relation=interest_relation,
+            tested_version_confirmed=tested_version_confirmed,
+        )
+        emit_api(
+            ctx,
+            "ai-product +review",
+            request_api(
+                "POST",
+                f"/api/backend-app/buddy/v1/posts/{quote_path_value(post_id)}/reviews",
+                data=body,
+                auth=True,
+                identity=request_identity(ctx),
+                timeout=timeout,
+                dry_run=dry_run,
+            ),
+        )
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("ai-product +review", exc, ctx.obj["json"])
+
+
+@ai_product.command("+list")
+@click.option("--scope", type=click.Choice(["all", "mine", "joined"]), default="all", show_default=True)
+@click.option("--target-id", default=None)
+@click.option("--timeout", type=int, default=30, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def ai_product_list(ctx: click.Context, scope: str, target_id: str | None, timeout: int, dry_run: bool) -> None:
+    """List AI product review rooms."""
+    try:
+        emit_api(
+            ctx,
+            "ai-product +list",
+            request_api(
+                "GET",
+                "/api/backend-app/buddy/v1/posts",
+                params={
+                    "scope": scope,
+                    "postType": "ai_product_review",
+                    "targetType": "ai_product",
+                    "targetId": target_id,
+                },
+                auth=True,
+                identity=request_identity(ctx),
+                timeout=timeout,
+                dry_run=dry_run,
+            ),
+        )
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("ai-product +list", exc, ctx.obj["json"])
+
+
+@ai_product.command("+detail")
+@click.option("--post-id", required=True)
+@click.option("--timeout", type=int, default=30, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def ai_product_detail(ctx: click.Context, post_id: str, timeout: int, dry_run: bool) -> None:
+    """Fetch an AI product review room by post id."""
+    try:
+        emit_api(
+            ctx,
+            "ai-product +detail",
+            request_api(
+                "GET",
+                f"/api/backend-app/buddy/v1/posts/{quote_path_value(post_id)}",
+                auth=True,
+                identity=request_identity(ctx),
+                timeout=timeout,
+                dry_run=dry_run,
+            ),
+        )
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("ai-product +detail", exc, ctx.obj["json"])
 
 
 @main.command("call")

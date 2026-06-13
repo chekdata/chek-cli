@@ -6,7 +6,7 @@ const gatewayCliMocks = vi.hoisted(() => ({
 }));
 vi.mock("./gateway-cli.js", () => gatewayCliMocks);
 import { parseConfig } from "./config.js";
-import { MemorUploadController } from "./service.js";
+import { ChekCliController } from "./service.js";
 function createRuntimeConfig(initialConfig) {
     let currentConfig = {
         plugins: {
@@ -33,7 +33,7 @@ function createLogger() {
         debug: vi.fn(),
     };
 }
-describe("MemorUploadController", () => {
+describe("ChekCliController", () => {
     afterEach(() => {
         vi.unstubAllGlobals();
         vi.clearAllMocks();
@@ -59,7 +59,7 @@ describe("MemorUploadController", () => {
             },
         }));
         vi.stubGlobal("fetch", fetchMock);
-        const controller = new MemorUploadController({
+        const controller = new ChekCliController({
             config: parseConfig({
                 backendAppBaseUrl: "https://api-dev.chekkk.com/api/backend-app",
                 authSessionId: "auth-session-1",
@@ -81,7 +81,7 @@ describe("MemorUploadController", () => {
         gatewayCliMocks.injectSessionNote.mockRejectedValue(new Error("gateway closed"));
         gatewayCliMocks.sendChatPrompt.mockRejectedValue(new Error("model unavailable"));
         const logger = createLogger();
-        const controller = new MemorUploadController({
+        const controller = new ChekCliController({
             config: parseConfig({
                 backendAppBaseUrl: "https://api-dev.chekkk.com/api/backend-app",
                 accessToken: "ckmu_test_token",
@@ -131,7 +131,7 @@ describe("MemorUploadController", () => {
     it("uses direct strategy replies for common publishing asks", async () => {
         gatewayCliMocks.ensureSession.mockResolvedValue({});
         gatewayCliMocks.injectSessionNote.mockResolvedValue(undefined);
-        const controller = new MemorUploadController({
+        const controller = new ChekCliController({
             config: parseConfig({
                 backendAppBaseUrl: "https://api-dev.chekkk.com/api/backend-app",
                 accessToken: "ckmu_test_token",

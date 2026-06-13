@@ -1,7 +1,13 @@
 from click.testing import CliRunner
+import pytest
 
 from cli_anything.frontend_app.frontend_cli import main
 from cli_anything.frontend_app.registry import REGISTRY_META
+
+
+@pytest.fixture(autouse=True)
+def isolated_cli_home(tmp_path, monkeypatch):
+    monkeypatch.setenv("CHEK_CLI_HOME", str(tmp_path / "chek-cli-home"))
 
 
 def write_fake_frontend_repo(root):
@@ -82,6 +88,122 @@ def test_vehicle_buying_plan_dry_run_json():
     assert '"agentReport"' in result.output
 
 
+def test_ai_product_research_plan_json():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "ai-product",
+            "+research-plan",
+            "--category",
+            "生产力工具",
+            "--product-name",
+            "Kimi",
+            "--software-version",
+            "2026 年 7 月网页版",
+            "--tag",
+            "长文本",
+        ],
+    )
+    assert result.exit_code == 0
+    assert '"command": "ai-product +research-plan"' in result.output
+    assert "Kimi 2026 年 7 月网页版 评测 体验" in result.output
+    assert '"duplicateCheck"' in result.output
+
+
+def test_ai_product_research_plan_accepts_top_level_json_file(tmp_path):
+    draft = tmp_path / "product.json"
+    draft.write_text(
+        '{"category":"生产力工具","product_name":"豆包","software_version":"网页版 2026-07","tags":["多模态"]}',
+        encoding="utf-8",
+    )
+    runner = CliRunner()
+    result = runner.invoke(main, ["--json", "ai-product", "+research-plan", "--from-file", str(draft)])
+    assert result.exit_code == 0
+    assert '"product_name": "豆包"' in result.output
+    assert "豆包 网页版 2026-07 评测 体验" in result.output
+
+
+def test_ai_product_duplicate_check_dry_run_json():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "ai-product",
+            "+duplicate-check",
+            "--category",
+            "具身机器人",
+            "--product-name",
+            "Unitree G1",
+            "--hardware-model",
+            "EDU",
+            "--software-version",
+            "v1.2.4",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0
+    assert '"dryRun": true' in result.output
+    assert "/api/backend-app/buddy/v1/posts/duplicate-check" in result.output
+    assert '"software_version": "v1.2.4"' in result.output
+
+
+def test_ai_product_publish_dry_run_json():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "ai-product",
+            "+publish",
+            "--category",
+            "AI 健康",
+            "--product-name",
+            "某 AI 健康 App",
+            "--software-version",
+            "iOS v3.6.1",
+            "--reason",
+            "值得复评康养问诊体验",
+            "--source-url",
+            "https://example.com/review",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0
+    assert '"command": "ai-product +publish"' in result.output
+    assert "/api/backend-app/buddy/v1/posts/duplicate-check" in result.output
+    assert "/api/backend-app/buddy/v1/posts" in result.output
+    assert '"post_type": "ai_product_review"' in result.output
+    assert '"hardware_model": ""' in result.output
+
+
+def test_ai_product_review_dry_run_json():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "ai-product",
+            "+review",
+            "--post-id",
+            "00000000-0000-0000-0000-000000000001",
+            "--stars",
+            "4.5",
+            "--comment",
+            "版本确认后体验稳定",
+            "--evidence-url",
+            "https://example.com/evidence",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0
+    assert '"command": "ai-product +review"' in result.output
+    assert "/api/backend-app/buddy/v1/posts/00000000-0000-0000-0000-000000000001/reviews" in result.output
+    assert '"rating": 9.0' in result.output
+
+
 def test_humanoid_compare_dry_run_json():
     runner = CliRunner()
     result = runner.invoke(main, ["--json", "humanoid", "+compare", "--id", "robot_1", "--id", "robot_2", "--dry-run"])
@@ -118,7 +240,7 @@ def test_dynamic_openapi_command_tree_path_option():
 
 def test_auth_profile_roundtrip_uses_isolated_home(tmp_path):
     runner = CliRunner()
-    env = {"CHEK_APP_CLI_HOME": str(tmp_path)}
+    env = {"CHEK_CLI_HOME": str(tmp_path)}
     token = "Bearer secret-token-123456"
     result = runner.invoke(main, ["--json", "auth", "set-token", "--token", token, "--profile", "dev-agent"], env=env)
     assert result.exit_code == 0
@@ -140,7 +262,7 @@ def test_auth_profile_roundtrip_uses_isolated_home(tmp_path):
 
 def test_lark_style_identity_and_credentials(tmp_path):
     runner = CliRunner()
-    env = {"CHEK_APP_CLI_HOME": str(tmp_path)}
+    env = {"CHEK_CLI_HOME": str(tmp_path)}
     token = "Bearer service-token-123456"
 
     result = runner.invoke(main, ["--json", "config", "default-as", "service"], env=env)

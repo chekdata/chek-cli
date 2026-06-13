@@ -12,7 +12,7 @@ import {
 } from "./gateway-cli.js";
 
 function makeTempFile(name: string): string {
-  const dir = mkdtempSync(path.join(os.tmpdir(), "memor-upload-gateway-cli-"));
+  const dir = mkdtempSync(path.join(os.tmpdir(), "chek-cli-gateway-cli-"));
   const file = path.join(dir, name);
   writeFileSync(file, "#!/usr/bin/env node\n", "utf-8");
   return file;
@@ -124,7 +124,7 @@ describe("gateway cli transcript helpers", () => {
           content: [
             {
               type: "text",
-              text: "请回复一下\n[message_id: memor-upload-abc]",
+              text: "请回复一下\n[message_id: chek-cli-abc]",
             },
           ],
         },
@@ -138,7 +138,7 @@ describe("gateway cli transcript helpers", () => {
           content: [
             {
               type: "text",
-              text: "收到，我这就看看。 [[reply_to: memor-upload-abc]]",
+              text: "收到，我这就看看。 [[reply_to: chek-cli-abc]]",
             },
           ],
         },
@@ -154,7 +154,7 @@ describe("gateway cli transcript helpers", () => {
       },
     ];
 
-    expect(extractReplyFromTranscriptEntries(entries as never, "memor-upload-abc")).toBe(
+    expect(extractReplyFromTranscriptEntries(entries as never, "chek-cli-abc")).toBe(
       "收到，我这就看看。",
     );
   });
