@@ -152,6 +152,30 @@ For each new candidate, fill:
 - `月度依据`: explain why it qualifies and any known uncertainty.
 - `搜索日期`: current local timestamp.
 
+## Priority Shortlist Pattern
+
+When the user asks to execute the next step after sourcing, mark a small evidence-collection shortlist without adding fields:
+
+- `重点`: set to `是` for P0/P1 records that need active follow-up.
+- `待补材料`: start with `P0 实测任务包 - <product>` or `P1 横评/复评任务包 - <product>`.
+- `月度依据`: start with `P0优先实测`, `P0复评`, `P1横评样本`, or `P1复评`, then explain why.
+- `状态`: keep the actionable status. Use `待实测材料` when the candidate is promising but lacks first-hand screenshots/videos/logs. Do not mark `建议提报` solely because Zhihu has discussion heat.
+
+Use `P0` for:
+
+- current-window products with official availability plus strong review value;
+- products with real user discussion and clear domestic access;
+- major version or feature changes that can materially alter a prior score.
+
+Use `P1` for:
+
+- comparison samples for a P0 product;
+- non-window but useful baseline products;
+-复评跟随项 where official proof is still weak;
+- candidates that need channel confirmation before formal submission.
+
+For复评, keep the original candidate row unless the product/version tuple has fundamentally changed. Add dated evidence requirements to `待补材料` and explain in `月度依据` that the update is a复评 variable, not a new product.
+
 ## Miss Pattern Notes
 
 Known miss patterns from prior work:

@@ -78,6 +78,30 @@ curl -sS -G 'https://developer.zhihu.com/api/v1/content/zhihu_search' \
 
 If `ACCESS_SECRET` is empty, skip the API call and use public web search or ask the user for a configured credential.
 
+## Batch Search Pattern
+
+When credentials are available, run a compact batch and save raw results outside the repo, for example under `/tmp`. Do not persist the Access Secret.
+
+Use one query per product or miss pattern. Keep `Count` at `5` to `8`; the API maximum is `10`.
+
+For each response:
+
+- require `Code == 0`;
+- record `Message`;
+- record the number of returned `Items`;
+- inspect titles, URLs, snippets, `EditTime`, `VoteUpCount`, `AuthorityLevel`, and `RankingScore`;
+- discard broad industry posts, old non-window posts, and content that only mentions the product in passing.
+
+Useful result groups:
+
+- product-specific hands-on reviews;
+- teardown or long-term use reports;
+- cross-product comparisons;
+- issue reports and limitations;
+- policy or feature shutdown discussions that affect复评.
+
+Do not write every Zhihu result into Feishu. Write only the 1-3 strongest result URLs per product into `证据来源`, with a short conclusion.
+
 ## Query Strategy
 
 Use Zhihu search to enrich the evidence pool, not to replace official verification.
@@ -118,3 +142,14 @@ Use Zhihu results especially for:
 - checking whether a domestic audience can access, test, buy, borrow, or discuss the product;
 - collecting user pain points and review angles;
 - finding version-specific field clues that official pages omit.
+
+## Priority Signals
+
+Zhihu evidence can promote a candidate to active follow-up when it shows:
+
+- several independent hands-on or comparison posts in the active window;
+- clear user pain points that require first-hand retest;
+- a product rename or alias mismatch, such as a product being called by its model assistant instead of the official hardware name;
+- a feature shutdown or policy-driven change that materially changes existing ratings.
+
+Even with strong Zhihu heat, keep official pages, app stores, manufacturer announcements, or real-device screenshots as the final proof for release date, exact version, availability, and formal submission.

@@ -54,7 +54,13 @@ Read [references/zhihu-developer-search.md](references/zhihu-developer-search.md
    - Use `lark-cli base +record-upsert` with direct field-name JSON.
    - Write compact, evidence-backed fields. Include source URLs in `证据来源`.
 
-6. Summarize after changes.
+6. Promote the next-step shortlist when requested.
+   - Do not add new Base columns for routine prioritization.
+   - Use existing fields: set `重点` to `是`, write `P0` or `P1` at the start of `待补材料`, and explain the priority in `月度依据`.
+   - Use `P0` for immediate formal-review or same-week evidence collection candidates, and `P1` for comparison samples,复评跟随项, or useful but non-window references.
+   - For复评 events, preserve the original candidate and add a dated复评任务包 instead of overwriting the earlier version logic.
+
+7. Summarize after changes.
    - Report inserted or updated products, or the local file path written.
    - For Feishu output, report total record count and duplicate check result.
    - For Feishu output, use `+data-query` for counts by `状态`, `类别`, and `统计时间窗口口径`.
