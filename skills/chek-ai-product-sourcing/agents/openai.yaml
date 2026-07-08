@@ -1,4 +1,4 @@
 interface:
   display_name: "CHEK AI Product Sourcing"
-  short_description: "维护 CHEK AI 产品候选、窗口口径与本地/飞书输出目标"
-  default_prompt: "Use $chek-ai-product-sourcing to source quarterly AI product candidates for local output or a user-specified Feishu base."
+  short_description: "维护 CHEK AI 产品候选、窗口口径、知乎证据与本地/飞书输出"
+  default_prompt: "Use $chek-ai-product-sourcing to source AI product candidates with official sources, optional Zhihu Developer search evidence, and local or user-specified Feishu output."

@@ -1,6 +1,6 @@
 ---
 name: chek-ai-product-sourcing
-description: Source, verify, classify, and package CHEK AI product candidates for either local output or a user-specified Feishu/Lark candidate base. Use when the user asks to search for AI products, fill or update a CHEK candidate pool, apply monthly or quarterly release windows, assess domestic availability/borrowability, prepare fields for AI product submission, check duplicate product candidates, or decide which candidates should be submitted later through the CHEK CLI.
+description: Source, verify, classify, and package CHEK AI product candidates for either local output or a user-specified Feishu/Lark candidate base, including optional Zhihu Developer on-site search evidence. Use when the user asks to search for AI products, fill or update a CHEK candidate pool, apply monthly or quarterly release windows, assess domestic availability/borrowability, prepare fields for AI product submission, check duplicate product candidates, use developer.zhihu.com/Zhihu site search, or decide which candidates should be submitted later through the CHEK CLI.
 ---
 
 # CHEK AI Product Sourcing
@@ -11,10 +11,13 @@ Use this skill to maintain the CHEK AI product candidate pool before formal subm
 
 Read [references/candidate-base.md](references/candidate-base.md) before writing records, changing status labels, summarizing counts, or deciding whether a product is eligible.
 
+Read [references/zhihu-developer-search.md](references/zhihu-developer-search.md) before using `developer.zhihu.com`, the Zhihu search API, or Zhihu on-site search results as evidence.
+
 ## Operating Rules
 
 - Browse the web for current product facts, release dates, versions, prices, official pages, App Store listings, and availability. Prefer official product pages, App Store pages, manufacturer pages, store pages, and reputable media.
 - Treat product and release information as time-sensitive. Do not rely on memory for "latest", "recent", "this month", or version claims.
+- Use Zhihu Developer on-site search as an additional Chinese discussion and experience-report source when credentials are available. Do not use Zhihu as the only source for release date, version, availability, or official capability claims.
 - Do not assume a default Feishu Base. If the user has not chosen an output target, ask whether to output local files or write to a user-specified Feishu/Lark Base.
 - Use `lark-base` before operating Feishu Base. Follow its rule to read field structure before writing and to avoid concurrent `+record-list` calls.
 - Do not submit products through the CHEK CLI unless the user explicitly confirms which candidates to submit.
@@ -33,6 +36,7 @@ Read [references/candidate-base.md](references/candidate-base.md) before writing
 2. Build search coverage by category.
    - Search by product category, brand, ecosystem, capability, hardware form factor, model supplier, and release wording.
    - Avoid relying only on "AI", "large model", "Agent", or head-brand keywords; this caused missed candidates such as `上汽大众 ID. ERA 9X`.
+   - If a Zhihu Developer Access Secret is available, run focused Zhihu site-search queries for user reports, evaluations, issues, comparisons, and domestic availability clues. Keep official sources as the final authority for factual fields.
 
 3. Verify candidate eligibility.
    - Confirm it is public-facing and consumer-usable: purchasable, downloadable, registerable, testable, or at least clearly available through a domestic trial/channel.
