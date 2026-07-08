@@ -17,6 +17,9 @@ from .ai_product import (
     build_research_plan,
     build_review_payload,
     duplicate_check_payload,
+    robot_config_version_edit_payload,
+    validate_formal_submission,
+    vehicle_sync_versions_edit_payload,
     product_from_inputs,
 )
 from .api_core import (
@@ -135,6 +138,8 @@ def main(ctx: click.Context, as_json: bool, output_format: str, identity: str | 
                         "api GET /api/backend-app/login/checkToken --dry-run",
                         "ai-product +research-plan --category 生产力工具 --product-name Kimi --software-version '2026 年 7 月网页版'",
                         "ai-product +publish --category 生产力工具 --product-name Kimi --software-version '2026 年 7 月网页版' --reason '值得测' --dry-run",
+                        "ai-product +publish --formal --category 具身机器人 --product-name Unitree --hardware-model H1 --software-version 'unitree_sdk2 main@7740f8b' ...",
+                        "ai-product +robot-version-edit --robot-id <robot_id> --product-name Unitree --hardware-model H1 --software-version 'unitree_sdk2 main@7740f8b'",
                         "ai-product +review --post-id <uuid> --stars 4 --comment '体验稳定' --dry-run",
                         "vehicle +search --query '小米 SU7' --dry-run",
                     ],
@@ -462,8 +467,24 @@ CURATED_EXAMPLES = [
         "domain": "ai-product",
         "positioning": ["AI 产品提报", "公众提报产品", "版本化评测房间"],
         "description": "Research, duplicate-check, and publish an AI product review room.",
-        "command": "chek ai-product +publish --category 生产力工具 --product-name Kimi --software-version '2026 年 7 月网页版' --reason '值得复评长文本能力' --dry-run",
+        "command": "chek ai-product +publish --formal --category 具身机器人 --product-name Unitree --hardware-model H1 --software-version 'unitree_sdk2 main@7740f8b' --source-url https://www.unitree.com/operate/h1/ --cover-image-url https://img.chekkk.com/app_project_pic/example.png --cover-source-url https://www.unitree.com/operate/h1/ --linked-entity 'targetType=humanoid_robot,targetId=<robot_id>,title=H1,tagTitle=H1,subtitle=宇树' --dry-run",
         "schemaPaths": ["backend-app.buddy.postsPost", "backend-app.buddy.posts"],
+    },
+    {
+        "name": "ai-product.robot-version-edit",
+        "domain": "ai-product",
+        "positioning": ["AI 产品提报", "机器人资料库", "版本化复评"],
+        "description": "Submit the robot library config-version edit that corresponds to a formal AI product review room.",
+        "command": "chek ai-product +robot-version-edit --robot-id <robot_id> --product-name Unitree --hardware-model H1 --software-version 'unitree_sdk2 main@7740f8b' --source-repo https://github.com/unitreerobotics/unitree_sdk2 --source-commit 7740f8b --post-id <room_uuid> --dry-run",
+        "schemaPaths": ["humanoid.robots.editsPost", "humanoid.edits.detail"],
+    },
+    {
+        "name": "ai-product.vehicle-version-edit",
+        "domain": "ai-product",
+        "positioning": ["AI 产品提报", "车型资料库", "版本化复评"],
+        "description": "Submit the vehicle library hardware/software sync edit that corresponds to a formal AI product review room.",
+        "command": "chek ai-product +vehicle-version-edit --vehicle-id <vehicle_id> --product-name '问界 M9' --hardware-model 'Max 智驾版' --software-version 'ADS 3.3.0' --dry-run",
+        "schemaPaths": ["vehicle.vehicles.editsPost", "vehicle.vehicles.editsGet"],
     },
     {
         "name": "ai-product.review",
@@ -1143,6 +1164,8 @@ def manifest_cmd(ctx: click.Context, include_operations: bool, operation_limit: 
                 "ai-product +duplicate-check",
                 "ai-product +publish",
                 "ai-product +edit",
+                "ai-product +robot-version-edit",
+                "ai-product +vehicle-version-edit",
                 "ai-product +review",
                 "ai-product +list",
                 "ai-product +detail",
@@ -1504,13 +1527,21 @@ def ai_product_duplicate_check(
 @click.option("--source-title", "source_titles", multiple=True)
 @click.option("--interest-relation", type=click.Choice(AI_PRODUCT_INTEREST_RELATIONS), default="普通用户", show_default=True)
 @click.option("--cover-image-url", default="")
+@click.option("--cover-source-url", default="", help="Original web page or image URL used to verify the cover before upload.")
 @click.option("--media-type", default="image", show_default=True)
 @click.option("--media-url", default="")
+@click.option(
+    "--linked-entity",
+    "linked_entities",
+    multiple=True,
+    help="Bound library entity as JSON or key=value pairs, e.g. targetType=humanoid_robot,targetId=...,title=Unitree H1.",
+)
 @click.option("--target-id", default="")
 @click.option("--opening-message", default="")
 @click.option("--duplicate-policy", type=click.Choice(["stop", "allow"]), default="stop", show_default=True)
 @click.option("--check-duplicate/--no-check-duplicate", default=True, show_default=True)
 @click.option("--require-source/--no-require-source", default=False, show_default=True)
+@click.option("--formal/--draft", default=False, show_default=True, help="Enforce official submission requirements.")
 @click.option("--timeout", type=int, default=30, show_default=True)
 @click.option("--dry-run", is_flag=True)
 @click.pass_context
@@ -1530,13 +1561,16 @@ def ai_product_publish(
     source_titles: tuple[str, ...],
     interest_relation: str,
     cover_image_url: str,
+    cover_source_url: str,
     media_type: str,
     media_url: str,
+    linked_entities: tuple[str, ...],
     target_id: str,
     opening_message: str,
     duplicate_policy: str,
     check_duplicate: bool,
     require_source: bool,
+    formal: bool,
     timeout: int,
     dry_run: bool,
 ) -> None:
@@ -1571,12 +1605,34 @@ def ai_product_publish(
             source_urls=source_urls,
             source_titles=source_titles,
             cover_image_url=cover_image_url,
+            cover_source_url=cover_source_url,
             media_type=media_type,
             media_url=media_url,
+            linked_entities=linked_entities,
             target_id=target_id,
             opening_message=opening_message,
             payload=raw_payload,
         )
+        if formal:
+            review_root = publish_payload.get("extras", {}).get("ai_product_review", {})
+            formal_errors = validate_formal_submission(
+                product=product,
+                research_sources=review_root.get("research_sources") if isinstance(review_root, dict) else [],
+                linked_entities=publish_payload.get("extras", {}).get("linkedEntities", []),
+                cover_image_url=publish_payload.get("coverImageUrl", ""),
+                cover_source_url=review_root.get("coverSourceUrl", "") if isinstance(review_root, dict) else "",
+            )
+            if formal_errors:
+                emit(
+                    CommandResult(
+                        False,
+                        "ai-product +publish",
+                        data={"product": product, "researchPlan": build_research_plan(product), "publishPayload": publish_payload},
+                        errors=formal_errors,
+                    ),
+                    ctx.obj["json"],
+                )
+                raise SystemExit(1)
         duplicate_result = None
         if check_duplicate:
             duplicate_result = request_api(
@@ -1620,6 +1676,7 @@ def ai_product_publish(
                 data={
                     "dryRun": dry_run,
                     "product": product,
+                    "formal": formal,
                     "researchPlan": build_research_plan(product),
                     "duplicateCheck": duplicate_result,
                     "publish": publish_result,
@@ -1652,10 +1709,14 @@ def ai_product_publish(
 @click.option("--source-title", "source_titles", multiple=True)
 @click.option("--interest-relation", type=click.Choice(AI_PRODUCT_INTEREST_RELATIONS), default="普通用户", show_default=True)
 @click.option("--cover-image-url", default="")
+@click.option("--cover-source-url", default="")
 @click.option("--media-type", default="image", show_default=True)
 @click.option("--media-url", default="")
+@click.option("--linked-entity", "linked_entities", multiple=True)
+@click.option("--target-id", default="")
 @click.option("--opening-message", default="")
 @click.option("--check-duplicate/--no-check-duplicate", default=True, show_default=True)
+@click.option("--formal/--draft", default=False, show_default=True)
 @click.option("--timeout", type=int, default=30, show_default=True)
 @click.option("--dry-run", is_flag=True)
 @click.pass_context
@@ -1676,10 +1737,14 @@ def ai_product_edit(
     source_titles: tuple[str, ...],
     interest_relation: str,
     cover_image_url: str,
+    cover_source_url: str,
     media_type: str,
     media_url: str,
+    linked_entities: tuple[str, ...],
+    target_id: str,
     opening_message: str,
     check_duplicate: bool,
+    formal: bool,
     timeout: int,
     dry_run: bool,
 ) -> None:
@@ -1703,11 +1768,34 @@ def ai_product_edit(
             source_urls=source_urls,
             source_titles=source_titles,
             cover_image_url=cover_image_url,
+            cover_source_url=cover_source_url,
             media_type=media_type,
             media_url=media_url,
+            linked_entities=linked_entities,
+            target_id=target_id,
             opening_message=opening_message,
             payload=raw_payload,
         )
+        if formal:
+            review_root = publish_payload.get("extras", {}).get("ai_product_review", {})
+            formal_errors = validate_formal_submission(
+                product=product,
+                research_sources=review_root.get("research_sources") if isinstance(review_root, dict) else [],
+                linked_entities=publish_payload.get("extras", {}).get("linkedEntities", []),
+                cover_image_url=publish_payload.get("coverImageUrl", ""),
+                cover_source_url=review_root.get("coverSourceUrl", "") if isinstance(review_root, dict) else "",
+            )
+            if formal_errors:
+                emit(
+                    CommandResult(
+                        False,
+                        "ai-product +edit",
+                        data={"product": product, "publishPayload": publish_payload},
+                        errors=formal_errors,
+                    ),
+                    ctx.obj["json"],
+                )
+                raise SystemExit(1)
         duplicate_result = None
         if check_duplicate:
             duplicate_result = request_api(
@@ -1750,6 +1838,136 @@ def ai_product_edit(
         if isinstance(exc, SystemExit):
             raise
         fail("ai-product +edit", exc, ctx.obj["json"])
+
+
+@ai_product.command("+robot-version-edit")
+@click.option("--robot-id", required=True, help="Existing humanoid robot library id.")
+@click.option("--from-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None)
+@click.option("--category", type=click.Choice(AI_PRODUCT_CATEGORIES), default="具身机器人", show_default=True)
+@click.option("--product-name", default=None)
+@click.option("--hardware-model", default=None)
+@click.option("--software-version", default=None)
+@click.option("--tag", "tags", multiple=True)
+@click.option("--source-repo", default="")
+@click.option("--source-commit", default="")
+@click.option("--post-id", default="", help="AI product review room id to link back.")
+@click.option("--checked-at", default="")
+@click.option("--title", default="")
+@click.option("--description", default="")
+@click.option("--timeout", type=int, default=30, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def ai_product_robot_version_edit(
+    ctx: click.Context,
+    robot_id: str,
+    from_file: Path | None,
+    category: str | None,
+    product_name: str | None,
+    hardware_model: str | None,
+    software_version: str | None,
+    tags: tuple[str, ...],
+    source_repo: str,
+    source_commit: str,
+    post_id: str,
+    checked_at: str,
+    title: str,
+    description: str,
+    timeout: int,
+    dry_run: bool,
+) -> None:
+    """Submit a robot config-version edit for a formal AI product review room."""
+    try:
+        product, _ = build_ai_product_from_options(
+            from_file=from_file,
+            category=category,
+            product_name=product_name,
+            hardware_model=hardware_model,
+            software_version=software_version,
+            tags=tags,
+        )
+        body = robot_config_version_edit_payload(
+            product=product,
+            source_repo=source_repo,
+            source_commit=source_commit,
+            buddy_post_id=post_id,
+            checked_at=checked_at,
+            title=title,
+            description=description,
+        )
+        emit_api(
+            ctx,
+            "ai-product +robot-version-edit",
+            request_api(
+                "POST",
+                f"/api/humanoid-chain/robots/{quote_path_value(robot_id)}/edits",
+                data=body,
+                auth=True,
+                identity=request_identity(ctx),
+                timeout=timeout,
+                dry_run=dry_run,
+            ),
+        )
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("ai-product +robot-version-edit", exc, ctx.obj["json"])
+
+
+@ai_product.command("+vehicle-version-edit")
+@click.option("--vehicle-id", required=True, help="Existing vehicle library id.")
+@click.option("--from-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None)
+@click.option("--category", type=click.Choice(AI_PRODUCT_CATEGORIES), default="智能汽车", show_default=True)
+@click.option("--product-name", default=None)
+@click.option("--hardware-model", default=None)
+@click.option("--software-version", default=None)
+@click.option("--tag", "tags", multiple=True)
+@click.option("--title", default="")
+@click.option("--description", default="")
+@click.option("--timeout", type=int, default=30, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def ai_product_vehicle_version_edit(
+    ctx: click.Context,
+    vehicle_id: str,
+    from_file: Path | None,
+    category: str | None,
+    product_name: str | None,
+    hardware_model: str | None,
+    software_version: str | None,
+    tags: tuple[str, ...],
+    title: str,
+    description: str,
+    timeout: int,
+    dry_run: bool,
+) -> None:
+    """Submit a vehicle hardware/software version edit for a formal AI product review room."""
+    try:
+        product, _ = build_ai_product_from_options(
+            from_file=from_file,
+            category=category,
+            product_name=product_name,
+            hardware_model=hardware_model,
+            software_version=software_version,
+            tags=tags,
+        )
+        body = vehicle_sync_versions_edit_payload(product=product, title=title, description=description)
+        emit_api(
+            ctx,
+            "ai-product +vehicle-version-edit",
+            request_api(
+                "POST",
+                f"/api/vms/api/vehicles/{quote_path_value(vehicle_id)}/edits",
+                data=body,
+                auth=True,
+                identity=request_identity(ctx),
+                timeout=timeout,
+                dry_run=dry_run,
+            ),
+        )
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("ai-product +vehicle-version-edit", exc, ctx.obj["json"])
 
 
 @ai_product.command("+review")

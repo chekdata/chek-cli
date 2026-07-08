@@ -177,6 +177,70 @@ def test_ai_product_publish_dry_run_json():
     assert "/api/backend-app/buddy/v1/posts" in result.output
     assert '"post_type": "ai_product_review"' in result.output
     assert '"hardware_model": ""' in result.output
+    assert "我们正在评审 某 AI 健康 App 这个具体版本" in result.output
+    assert "证据材料：" not in result.output
+
+
+def test_ai_product_publish_formal_requires_cover_and_entity_for_robots():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "ai-product",
+            "+publish",
+            "--category",
+            "具身机器人",
+            "--product-name",
+            "Unitree",
+            "--hardware-model",
+            "H1",
+            "--software-version",
+            "unitree_sdk2 main@7740f8b",
+            "--source-url",
+            "https://github.com/unitreerobotics/unitree_sdk2",
+            "--formal",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 1
+    assert "必须绑定车型库或机器人库实体" in result.output
+    assert "必须上传封面" in result.output
+    assert "必须记录封面的联网来源" in result.output
+
+
+def test_ai_product_publish_formal_accepts_linked_entity_and_cover():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "ai-product",
+            "+publish",
+            "--category",
+            "具身机器人",
+            "--product-name",
+            "Unitree",
+            "--hardware-model",
+            "H1",
+            "--software-version",
+            "unitree_sdk2 main@7740f8b",
+            "--source-url",
+            "https://github.com/unitreerobotics/unitree_sdk2",
+            "--cover-image-url",
+            "https://img.chekkk.com/app_project_pic/example.png",
+            "--cover-source-url",
+            "https://www.unitree.com/operate/h1/",
+            "--linked-entity",
+            "targetType=humanoid_robot,targetId=robot_1,title=H1,tagTitle=H1,subtitle=宇树",
+            "--formal",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0
+    assert '"formal": true' in result.output
+    assert '"targetType": "humanoid_robot"' in result.output
+    assert '"coverSourceUrl": "https://www.unitree.com/operate/h1/"' in result.output
 
 
 def test_ai_product_review_dry_run_json():
@@ -202,6 +266,64 @@ def test_ai_product_review_dry_run_json():
     assert '"command": "ai-product +review"' in result.output
     assert "/api/backend-app/buddy/v1/posts/00000000-0000-0000-0000-000000000001/reviews" in result.output
     assert '"rating": 9.0' in result.output
+
+
+def test_ai_product_robot_version_edit_dry_run_json():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "ai-product",
+            "+robot-version-edit",
+            "--robot-id",
+            "robot_1",
+            "--product-name",
+            "Unitree",
+            "--hardware-model",
+            "H1",
+            "--software-version",
+            "unitree_sdk2 main@7740f8b",
+            "--source-repo",
+            "https://github.com/unitreerobotics/unitree_sdk2",
+            "--source-commit",
+            "7740f8b",
+            "--post-id",
+            "post_1",
+            "--checked-at",
+            "2026-07-09",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "/api/humanoid-chain/robots/robot_1/edits" in result.output
+    assert '"type": "create_config_version"' in result.output
+    assert '"buddyPostId": "post_1"' in result.output
+
+
+def test_ai_product_vehicle_version_edit_dry_run_json():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "ai-product",
+            "+vehicle-version-edit",
+            "--vehicle-id",
+            "vehicle_1",
+            "--product-name",
+            "问界 M9",
+            "--hardware-model",
+            "Max",
+            "--software-version",
+            "ADS 3.3.0",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "/api/vms/api/vehicles/vehicle_1/edits" in result.output
+    assert '"type": "sync_versions"' in result.output
+    assert '"hardwareOptions": [' in result.output
 
 
 def test_humanoid_compare_dry_run_json():

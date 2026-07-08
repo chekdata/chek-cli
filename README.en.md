@@ -154,6 +154,36 @@ chek ai-product +publish \
   --source-url "https://example.com/source" \
   --dry-run
 
+chek ai-product +publish \
+  --category 具身机器人 \
+  --product-name Unitree \
+  --hardware-model H1 \
+  --software-version "unitree_sdk2 main@7740f8b" \
+  --source-url "https://www.unitree.com/operate/h1/" \
+  --source-url "https://github.com/unitreerobotics/unitree_sdk2" \
+  --cover-image-url "https://img.chekkk.com/app_project_pic/example.png" \
+  --cover-source-url "https://www.unitree.com/operate/h1/" \
+  --linked-entity "targetType=humanoid_robot,targetId=<robot_id>,title=H1,tagTitle=H1,subtitle=宇树" \
+  --formal \
+  --dry-run
+
+chek ai-product +robot-version-edit \
+  --robot-id <robot_id> \
+  --product-name Unitree \
+  --hardware-model H1 \
+  --software-version "unitree_sdk2 main@7740f8b" \
+  --source-repo "https://github.com/unitreerobotics/unitree_sdk2" \
+  --source-commit 7740f8b \
+  --post-id <room_uuid> \
+  --dry-run
+
+chek ai-product +vehicle-version-edit \
+  --vehicle-id <vehicle_id> \
+  --product-name "AITO M9" \
+  --hardware-model "Max ADAS" \
+  --software-version "ADS 3.3.0" \
+  --dry-run
+
 chek ai-product +review \
   --post-id <room_uuid> \
   --stars 4.5 \
@@ -164,6 +194,13 @@ chek vehicle +rankings --scene urban --window latest --dry-run
 chek humanoid +compare --id robot_1 --id robot_2 --dry-run
 chek backend-app humanoid leaderboards --dry-run
 ```
+
+`--formal` enforces official CHEK submission rules: web-researched sources,
+uploaded CHEK cover media, original cover source URL, and vehicle/robot library
+binding for intelligent vehicles and embodied robots. The generated opening
+message is written for community readers, not as a raw evidence dump. Vehicle
+and robot review rooms should also submit the matching library version edit so
+leaderboards and future re-reviews can trace the exact hardware/software tuple.
 
 ## OpenClaw Plugin
 

@@ -83,11 +83,47 @@ chek ai-product +publish \
   --source-url "https://example.com/source" \
   --dry-run
 
+chek ai-product +publish \
+  --category 具身机器人 \
+  --product-name Unitree \
+  --hardware-model H1 \
+  --software-version "unitree_sdk2 main@7740f8b" \
+  --source-url "https://www.unitree.com/operate/h1/" \
+  --source-url "https://github.com/unitreerobotics/unitree_sdk2" \
+  --cover-image-url "https://img.chekkk.com/app_project_pic/example.png" \
+  --cover-source-url "https://www.unitree.com/operate/h1/" \
+  --linked-entity "targetType=humanoid_robot,targetId=<robot_id>,title=H1,tagTitle=H1,subtitle=宇树" \
+  --formal \
+  --dry-run
+
 chek ai-product +review \
   --post-id <room_uuid> \
   --stars 4.5 \
   --comment "版本确认后体验稳定" \
   --evidence-url "https://example.com/evidence" \
+  --dry-run
+```
+
+`--formal` 用于正式 CHEK AI 产品评审提报，会强制检查联网来源、封面来源、CHEK 媒体封面，以及智能汽车/具身机器人对应的车型库或机器人库实体绑定。CLI 默认生成面向用户阅读的房间首条消息，避免把搜索日志、证据清单或技术字段直接堆到首屏。
+
+机器人/车型评审还应同步资料库版本，便于榜单和复评追溯：
+
+```bash
+chek ai-product +robot-version-edit \
+  --robot-id <robot_id> \
+  --product-name Unitree \
+  --hardware-model H1 \
+  --software-version "unitree_sdk2 main@7740f8b" \
+  --source-repo "https://github.com/unitreerobotics/unitree_sdk2" \
+  --source-commit 7740f8b \
+  --post-id <room_uuid> \
+  --dry-run
+
+chek ai-product +vehicle-version-edit \
+  --vehicle-id <vehicle_id> \
+  --product-name "问界 M9" \
+  --hardware-model "Max 智驾版" \
+  --software-version "ADS 3.3.0" \
   --dry-run
 ```
 

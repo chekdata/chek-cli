@@ -85,6 +85,21 @@ When the user says to search with a larger window, search by the quarterly windo
 - Glasses and AI hardware: include exact hardware SKU, app/firmware version, paired phone system when relevant, and privacy/safety notes.
 - Health: include app version, AI entrance, disclaimer, AI vs doctor boundary, privacy/data deletion notes, and red-flag symptom test requirements.
 
+## Formal Submission Notes
+
+Formal CLI submission is stricter than candidate collection:
+
+- Formal CHEK CLI submission from this skill is production-only. Before any mutating command, run `chek --json config show` and proceed only when it reports `env=prod` and `api_origin=https://api.chekkk.com`.
+- Run duplicate check against product name + hardware model + software version. If a duplicate exists, route to the existing room instead of publishing.
+- Use `chek ai-product +publish` only after duplicate check, current web sources, cover upload, and canonical binding are ready. If the installed CLI exposes a formal flag, use it for official review rooms.
+- Provide at least one current web source, a CHEK-uploaded cover image URL, and the original cover source URL. If the CLI cannot upload or reference a CHEK media URL, stop and report the capability gap instead of publishing without a cover.
+- Keep title fields clean: do not set `硬件型号` equal to `产品名`; use a real trim/SKU/scope for hardware products, or leave hardware blank only for pure software.
+- For cars and robots, bind the corresponding library entity and submit the matching hardware/software or config-version edit using the installed CLI's supported command.
+- After a car/robot library edit, read back the library detail/version list. If the expected version is not visible, mark the sync unresolved and do not claim the formal binding is complete.
+- If the library main entry is missing, keep the candidate in a pending main-entry workflow instead of publishing an unbound formal review room.
+- After publishing, read back the room and verify category, product name, hardware model, software version, cover, tags, linked entity, and first message.
+- Convert evidence into a reader-friendly room introduction. Do not paste all candidate fields into the room hero or first message.
+
 ## Local Output
 
 For local output, create a file in the current workspace. Use the same fields listed above.

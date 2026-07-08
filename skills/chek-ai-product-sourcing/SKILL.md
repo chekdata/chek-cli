@@ -80,4 +80,55 @@ Use this checklist when the user asks whether anything is missing:
 
 Candidate sourcing and formal product submission are separate phases.
 
+Formal CHEK CLI submission in this skill is production-only. Before any mutating CHEK command, run:
+
+```bash
+chek --json config show
+chek auth status
+```
+
+Proceed only when the config reports `env=prod` and `api_origin=https://api.chekkk.com`. If either value is different, run `chek config set-env prod`, re-run `chek --json config show`, and continue only after the user has confirmed a formal production submission. Do not publish, edit, review, approve, upload media, or mutate vehicle/robot library data from this skill unless the active CHEK CLI target is production.
+
 Before formal CLI submission, re-check duplicate rooms online, lock the exact version tuple, and confirm with the user. Formal submission should fill richer fields from the candidate record and current web search, then route users to any existing room when a duplicate is found.
+
+Formal CHEK CLI submission workflow:
+
+1. Lock a clean, real version tuple.
+   - Required tuple: `产品名 + 硬件型号 + 软件版本`.
+   - Pure software products may leave `硬件型号` blank, but `软件版本` must be date-specific or version-specific.
+   - Intelligent vehicles and robots must include the real trim/SKU/hardware scope and the exact software/system/firmware/SDK version.
+   - Do not set `硬件型号` equal to `产品名`; use a meaningful trim, SKU, scope, or hardware generation so the generated room title does not repeat itself.
+
+2. Keep user-facing text clean.
+   - The room title should read like a product review object, not a worklog: product + non-duplicative hardware/trim/scope + software version.
+   - Do not put sourcing notes, "资料整理", "榜单支撑", dates, internal IDs, backend field names, or debug labels in the title.
+   - The opening room message must answer: what exact version is being reviewed, why it is worth testing, and how users can participate.
+   - Do not paste raw search logs, long evidence dumps, or candidate-table field names into the first message.
+
+3. Search and prepare evidence.
+   - Re-run current web search immediately before publishing. Prefer official product pages, official announcements, manufacturer media, app stores, GitHub/social preview images, or reputable media.
+   - Use Zhihu Developer search only as discussion and clue evidence; keep official pages, app stores, manufacturer announcements, stores, or reputable media as factual authority for release/version/availability.
+   - Search for a real cover image online. Prefer official/reputable images that show the actual product or software UI. Upload the selected image to CHEK media when the CLI exposes a media-upload command; otherwise stop and report the upload capability gap instead of publishing without a CHEK media URL.
+   - Preserve both the CHEK media URL and the original cover source URL.
+
+4. Resolve canonical tags and library bindings.
+   - For vehicles, search the vehicle library first with `chek vehicle +search --query "<产品或车型>"`.
+   - For robots, search the robot library first with `chek humanoid +search --query "<产品或型号>"` and inspect versions with `chek humanoid +config --id <robot_id>`.
+   - Bind the review room to the canonical entity through the installed CLI's supported linked-entity option or JSON draft field. Verify the published room preserves the full target type and target id; if the returned tag/entity is truncated or missing, stop and report the binding issue.
+   - If the matching vehicle or robot main entry does not exist, do not publish an unbound formal review room. Put the candidate into a main-entry-needed queue and ask for the governance/main-entry flow.
+
+5. Synchronize version data for vehicles and robots.
+   - Submit the matching vehicle or robot version edit before or alongside the room using the installed CLI's supported command. Prefer formal shortcuts such as `chek ai-product +vehicle-version-edit` or `chek ai-product +robot-version-edit` when they exist; otherwise confirm the generated schema command with `chek schema` or `chek routes find` before any production mutation.
+   - For vehicles, verify the new hardware/software pair by reading vehicle detail and software options after the edit is approved or applied.
+   - For robots, verify the new config/version by reading robot detail and config versions after the edit is approved or applied.
+   - If the write succeeds but readback does not show the expected version, mark the library sync unresolved and do not claim the formal binding is complete.
+
+6. Duplicate-check and publish.
+   - Run `chek ai-product +duplicate-check` against `产品名 + 硬件型号 + 软件版本`.
+   - If a duplicate exists, do not publish; return the existing room and suggest adding evidence or a review there.
+   - Run `chek ai-product +publish` only after duplicate check, cover upload, source collection, and canonical binding are ready. If the installed CLI exposes a `--formal` flag, use it for official review rooms.
+   - Keep evidence layered: concise reader-facing explanation in the room, key links only, and raw URLs/commit/source details in structured fields or follow-up evidence messages.
+
+7. Verify after publish.
+   - Read back the room detail with CLI and verify category, product name, hardware model, software version, status, cover, linked entity, tags, and opening message.
+   - For a formal vehicle/robot room, also read back the canonical library version data. Do not close the task as complete if the room exists but the library version sync or entity binding is unresolved.
