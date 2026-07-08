@@ -1,0 +1,4 @@
+interface:
+  display_name: "CHEK Prod AI Product Ops"
+  short_description: "prod AI产品提报、评审房间与机器人库维护"
+  default_prompt: "Use $chek-prod-ai-product-ops to run production CHEK AI product review submissions and long-term robot database maintenance."

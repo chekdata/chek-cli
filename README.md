@@ -512,6 +512,7 @@ chek auth profile import dev-agent --file ./dev-agent.profile.json --activate
 
 - [`skills/chek-setup/SKILL.md`](./skills/chek-setup/SKILL.md)：帮助 OpenClaw 完成 CHEK CLI setup、浏览器授权、token 兜底和健康检查。
 - [`skills/chek-ai-product-sourcing/SKILL.md`](./skills/chek-ai-product-sourcing/SKILL.md)：帮助 Agent 搜索、验证、分类、去重和整理 CHEK AI 产品候选，再进入正式 CLI 提报阶段。它只写本地文件或用户本轮指定的飞书/Lark 候选库，不硬编码默认候选库。
+- [`skills/chek-prod-ai-product-ops/SKILL.md`](./skills/chek-prod-ai-product-ops/SKILL.md)：帮助 Agent 在生产环境执行正式 AI 产品评审房间提报、封面溯源、车型/机器人绑定、版本编辑提交、评测证据发布和长期机器人数据库维护；这个 skill 明确禁止 DEV/staging 操作。
 
 ## 前端和证据辅助
 
@@ -591,6 +592,7 @@ CI 也会运行 `scripts/check_registry_drift.py --allow-missing-optional`。如
 - `src/render.ts`：房间上下文压缩、intent 识别、直接回复和本地 prompt 构造。
 - `skills/chek-setup/SKILL.md`：随仓库发布的 setup skill。
 - `skills/chek-ai-product-sourcing/SKILL.md`：随仓库发布的 AI 产品候选 sourcing skill。
+- `skills/chek-prod-ai-product-ops/SKILL.md`：随仓库发布的 prod-only AI 产品提报和机器人库维护 skill。
 - `docs/bootstrap-message.md`：面向用户的一段式引导文案。
 - `docs/device-code-auth.md`：浏览器授权链路和 fallback 规则。
 - `docs/troubleshooting.md`：常见排障路径。
