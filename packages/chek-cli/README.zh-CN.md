@@ -34,6 +34,17 @@ CHEK CLI 是这些应用形态的 Agent 入口：
 
 ## 安装
 
+用户安装推荐使用 release tag 或包源：
+
+```bash
+python -m pip install "git+https://github.com/chekdata/chek-cli.git@v0.5.0#subdirectory=packages/chek-cli"
+chek --help
+chek ai-product +publish --help
+chek media +upload-cover --help
+```
+
+开发安装：
+
 ```bash
 python -m pip install -e ".[dev]"
 ```
@@ -81,6 +92,11 @@ chek ai-product +publish \
   --reason "值得复评长文本能力" \
   --scenario "办公、学习、资料整理" \
   --source-url "https://example.com/source" \
+  --dry-run
+
+chek media +upload-cover \
+  --file ./cover.png \
+  --source-url "https://www.unitree.com/operate/h1/" \
   --dry-run
 
 chek ai-product +publish \
@@ -168,7 +184,7 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 
 | 层级 | 命令 | 用途 |
 | --- | --- | --- |
-| Shortcut | `ai-product +publish`, `ai-product +review`, `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | 给 Agent 的稳定高频工作流 |
+| Shortcut | `ai-product +publish`, `ai-product +review`, `media +upload-cover`, `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | 给 Agent 的稳定高频工作流 |
 | OpenAPI 命令树 | `vehicle vehicles batch-search`, `backend-app agent skills-run`, `humanoid robots detail` | 自动生成的服务/资源/方法命令 |
 | API 命令 | `schema`, `call`, `api` | 参数发现、registry 调用、原始路径兜底 |
 | 会话 | `--as auto/user/service/none`, `config default-as`, `auth`, `auth profile`, `auth credential` | 类 Lark 的身份切换、环境、token、profile 与凭证管理 |
@@ -258,7 +274,18 @@ chek flow smoke --url http://localhost:10086 --retries 10 --interval 2
 
 ## 发布
 
-打 tag 会通过 GitHub Actions 构建 wheel/sdist。如果配置了 `PYPI_API_TOKEN`，tag release 会自动发布到 PyPI。仓库也提供 Dockerfile：
+发布时 bump 版本、构建并上传 GitHub Release 资产：
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest -q tests
+python -m build
+chek --help
+chek ai-product +publish --help
+chek media +upload-cover --help
+```
+
+Release 应包含 wheel、sdist，以及仓库根目录构建出的 npm tarball。PyPI、npm、Homebrew tap 和内部包源使用同一个 release 版本和 checksum。如果配置了 `PYPI_API_TOKEN`，tag release 可以继续自动发布到 PyPI。仓库也提供 Dockerfile：
 
 ```bash
 docker build -t chek-cli .

@@ -79,6 +79,29 @@ Examples:
 
 The Python CLI emits JSON by default. `--json` is kept as a compatibility alias for `--format json`.
 
+For user-facing distribution, prefer GitHub Release assets or package registries instead of editable installs:
+
+```bash
+# pip / pipx: install the Python CLI from the release tag
+python -m pip install "git+https://github.com/chekdata/chek-cli.git@v0.5.0#subdirectory=packages/chek-cli"
+
+# npm / pnpm: install the OpenClaw plugin package from the release tarball
+npm install -g "https://github.com/chekdata/chek-cli/releases/download/v0.5.0/chek-chek-cli-0.5.0.tgz"
+
+# Homebrew or internal package sources should point to the v0.5.0 release assets and checksums.
+```
+
+After installation, verify that the AI product commands are present:
+
+```bash
+chek --help
+chek manifest
+chek ai-product +publish --help
+chek media +upload-cover --help
+```
+
+Development installs can still use editable mode:
+
 ```bash
 cd packages/chek-cli
 python -m pip install -e ".[dev]"
@@ -114,7 +137,7 @@ chek micontrol create --task "帮我分析这次智驾报告" --dry-run
 
 | Product moment | User value | Agent entry point | Operations behind it |
 | --- | --- | --- | --- |
-| AI product public review | Version-specific review rooms: submit product, collect evidence, rate with stars, and keep re-reviewing. | `ai-product +research-plan`, `+duplicate-check`, `+publish`, `+edit`, `+review` | `/api/backend-app/buddy/v1/posts`, `duplicate-check`, `reviews`, `backend-app.buddy.posts` |
+| AI product public review | Version-specific review rooms: submit product, collect evidence, rate with stars, and keep re-reviewing. | `ai-product +research-plan`, `+duplicate-check`, `+publish`, `+edit`, `+review`, `media +upload-cover` | `/api/backend-app/buddy/v1/posts`, `duplicate-check`, `reviews`, `backend-app.buddy.posts`, `backend-app.media.images` |
 | Driving reports | Turn trip data into safety, efficiency, comfort, and NOA signals users can understand. | `vehicle +buying-plan`, `vehicle +rankings`, `backend-saas report-visualization ...` | `backend-saas.reportVisualization.*`, `backend-saas.noaJour.*`, `backend-saas.journeys.*`, `vehicle.vehicles.detail` |
 | Intelligent-driving score | Evidence trails for each tested vehicle, hardware config, and software version. | `vehicle +rankings`, generated `backend-saas app-vehicle-metrics ...` calls | `backend-saas.appVehicleMetrics.rankTop3`, `rankPage`, `modelDetail`, `debugSourceBreakdown` |
 | Vehicle leaderboards | City/highway/scene-aware rankings that answer who is strong and why. | `vehicle +rankings` | `backend-saas.appVehicleMetrics.*`, `backend-saas.noaJour.highwayNoaRankTop3`, `backend-saas.options.scene` |
@@ -152,6 +175,11 @@ chek ai-product +publish \
   --product-name Kimi \
   --software-version "2026 年 7 月网页版" \
   --source-url "https://example.com/source" \
+  --dry-run
+
+chek media +upload-cover \
+  --file ./cover.png \
+  --source-url "https://www.unitree.com/operate/h1/" \
   --dry-run
 
 chek ai-product +publish \
@@ -225,6 +253,33 @@ openclaw chek bootstrap
 ```
 
 After setup, the plugin can create browser-auth sessions, persist stable install/device IDs, poll CHEK room `@` mention tasks, load recent room context, inject that context into a local OpenClaw session, generate a reply, send the reply back to the CHEK room, and complete or fail the mention task.
+
+## Release
+
+Release versions should cover the Python CLI, npm/OpenClaw plugin package, and GitHub Release assets:
+
+```bash
+pnpm install
+pnpm build
+pnpm test
+
+cd packages/chek-cli
+python -m pip install -e ".[dev]"
+python -m pytest -q tests
+python -m build
+
+chek --help
+chek ai-product +publish --help
+chek media +upload-cover --help
+```
+
+After tagging `vX.Y.Z`, publish a GitHub Release and upload:
+
+- root npm tarball, for example `chek-chek-cli-X.Y.Z.tgz`
+- Python wheel, for example `chek_cli-X.Y.Z-py3-none-any.whl`
+- Python sdist, for example `chek_cli-X.Y.Z.tar.gz`
+
+PyPI, npm, Homebrew taps, and internal package sources should consume the same release version and checksums. If registry tokens such as `PYPI_API_TOKEN` are configured, CI or a release script can continue publishing to the official package registry.
 
 ## Repository Note
 

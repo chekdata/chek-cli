@@ -36,6 +36,17 @@ The CLI follows the lark-cli pattern rather than a browser-harness pattern:
 
 ## Install
 
+For user installs, prefer a release tag or package source:
+
+```bash
+python -m pip install "git+https://github.com/chekdata/chek-cli.git@v0.5.0#subdirectory=packages/chek-cli"
+chek --help
+chek ai-product +publish --help
+chek media +upload-cover --help
+```
+
+Development install:
+
 ```bash
 python -m pip install -e ".[dev]"
 ```
@@ -83,6 +94,11 @@ chek ai-product +publish \
   --reason "值得复评长文本能力" \
   --scenario "办公、学习、资料整理" \
   --source-url "https://example.com/source" \
+  --dry-run
+
+chek media +upload-cover \
+  --file ./cover.png \
+  --source-url "https://www.unitree.com/operate/h1/" \
   --dry-run
 
 chek ai-product +publish \
@@ -175,7 +191,7 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 
 | Layer | Commands | Purpose |
 | --- | --- | --- |
-| Shortcuts | `ai-product +publish`, `ai-product +review`, `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | Stable high-level workflows for agents |
+| Shortcuts | `ai-product +publish`, `ai-product +review`, `media +upload-cover`, `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | Stable high-level workflows for agents |
 | OpenAPI tree | `vehicle vehicles batch-search`, `backend-app agent skills-run`, `humanoid robots detail` | Generated service/resource/method commands |
 | API commands | `schema`, `call`, `api` | Discovery, registry-backed calls, and raw backend fallback |
 | Session | `--as auto/user/service/none`, `config default-as`, `auth`, `auth profile`, `auth credential` | Lark-style identity switching, API origin, token, profile, and credential management |
@@ -277,9 +293,18 @@ root and are intentionally git-ignored.
 
 ## Release
 
-Tag releases build wheel/sdist artifacts through GitHub Actions. If
-`PYPI_API_TOKEN` is configured, tagged releases publish to PyPI. The repository
-also includes a Dockerfile:
+Release work should bump the version, build artifacts, and upload GitHub Release assets:
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest -q tests
+python -m build
+chek --help
+chek ai-product +publish --help
+chek media +upload-cover --help
+```
+
+The release should include wheel, sdist, and the root npm tarball. PyPI, npm, Homebrew taps, and internal package sources should consume the same release version and checksums. If `PYPI_API_TOKEN` is configured, tagged releases can continue publishing to PyPI. The repository also includes a Dockerfile:
 
 ```bash
 docker build -t chek-cli .

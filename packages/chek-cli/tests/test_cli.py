@@ -243,6 +243,33 @@ def test_ai_product_publish_formal_accepts_linked_entity_and_cover():
     assert '"coverSourceUrl": "https://www.unitree.com/operate/h1/"' in result.output
 
 
+def test_media_upload_cover_dry_run_json(tmp_path):
+    cover = tmp_path / "cover.png"
+    cover.write_bytes(b"\x89PNG\r\n\x1a\n")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "--json",
+            "media",
+            "+upload-cover",
+            "--file",
+            str(cover),
+            "--source-url",
+            "https://example.com/product",
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0
+    assert '"command": "media +upload-cover"' in result.output
+    assert "/api/backend-app/media/v1/images" in result.output
+    assert '"multipart": true' in result.output
+    assert '"sourceUrl": "https://example.com/product"' in result.output
+    assert '"filename": "cover.png"' in result.output
+    assert '"contentType": "image/png"' in result.output
+    assert "Use the returned CHEK media URL as --cover-image-url" in result.output
+
+
 def test_ai_product_review_dry_run_json():
     runner = CliRunner()
     result = runner.invoke(
@@ -451,3 +478,4 @@ def test_manifest_json():
     assert result.exit_code == 0
     assert '"identityModel"' in result.output
     assert '"operations"' in result.output
+    assert '"media +upload-cover"' in result.output

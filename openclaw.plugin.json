@@ -2,7 +2,7 @@
   "id": "chek-cli",
   "name": "CHEK CLI",
   "description": "Agent-native CHEK CLI and OpenClaw helpers for review rooms, AI product publication, and mention handling.",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "skills": [
     "./skills"
   ],

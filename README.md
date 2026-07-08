@@ -166,6 +166,29 @@ CHEK 的 AI 产品公开评测流程是：
 
 Python CLI 默认输出 JSON，`--json` 作为 `--format json` 的兼容别名保留。
 
+面向用户分发时，优先使用 GitHub Release 资产或包源安装，而不是开发模式：
+
+```bash
+# pip / pipx：从发布 tag 安装 Python CLI
+python -m pip install "git+https://github.com/chekdata/chek-cli.git@v0.5.0#subdirectory=packages/chek-cli"
+
+# npm / pnpm：从 release 上传的 npm tarball 安装 OpenClaw 插件包
+npm install -g "https://github.com/chekdata/chek-cli/releases/download/v0.5.0/chek-chek-cli-0.5.0.tgz"
+
+# Homebrew 或内部包源：使用 v0.5.0 release tarball/wheel，并在公式或内网索引中记录 checksum
+```
+
+安装后先确认 AI 产品能力已经在命令树里：
+
+```bash
+chek --help
+chek manifest
+chek ai-product +publish --help
+chek media +upload-cover --help
+```
+
+开发安装仍然可以使用 editable 模式：
+
 ```bash
 cd packages/chek-cli
 python -m pip install -e ".[dev]"
@@ -201,7 +224,7 @@ chek micontrol create --task "帮我分析这次智驾报告" --dry-run
 
 | 产品场景 | 用户得到什么 | Agent 入口 | 背后的 operation |
 | --- | --- | --- | --- |
-| AI 产品公开评测 | 版本化的评测房间：提报产品、补资料、打星、持续复评。 | `ai-product +research-plan`, `+duplicate-check`, `+publish`, `+edit`, `+review` | `/api/backend-app/buddy/v1/posts`, `duplicate-check`, `reviews`, `backend-app.buddy.posts` |
+| AI 产品公开评测 | 版本化的评测房间：提报产品、补资料、打星、持续复评。 | `ai-product +research-plan`, `+duplicate-check`, `+publish`, `+edit`, `+review`, `media +upload-cover` | `/api/backend-app/buddy/v1/posts`, `duplicate-check`, `reviews`, `backend-app.buddy.posts`, `backend-app.media.images` |
 | 这车开得咋样 | 把行程数据变成一眼能懂的智驾报告，看到安全、效率、舒适、NOA 表现。 | `vehicle +buying-plan`, `vehicle +rankings`, `backend-saas report-visualization ...` | `backend-saas.reportVisualization.*`, `backend-saas.noaJour.*`, `backend-saas.journeys.*`, `vehicle.vehicles.detail` |
 | 智驾跑分 | 按车型、硬件配置、软件版本沉淀跑分和证据，不只是品牌印象。 | `vehicle +rankings`, generated `backend-saas app-vehicle-metrics ...` calls | `backend-saas.appVehicleMetrics.rankTop3`, `rankPage`, `modelDetail`, `debugSourceBreakdown` |
 | 智能汽车榜 | 城市、高速、场景化榜单回答“谁强、强在哪、证据是什么”。 | `vehicle +rankings` | `backend-saas.appVehicleMetrics.*`, `backend-saas.noaJour.highwayNoaRankTop3`, `backend-saas.options.scene` |
@@ -251,6 +274,11 @@ chek ai-product +publish \
 正式 CHEK AI 产品提报应使用 `--formal`。它会要求 Agent 先完成联网搜索、封面确认和实体绑定：
 
 ```bash
+chek media +upload-cover \
+  --file ./cover.png \
+  --source-url "https://www.unitree.com/operate/h1/" \
+  --dry-run
+
 chek ai-product +publish \
   --category 具身机器人 \
   --product-name Unitree \
@@ -398,7 +426,7 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 
 ```text
 ai-product, api, auth, backend-app, backend-saas, build, call, config,
-crowd, discovery, doctor, examples, flow, humanoid, manifest, micontrol,
+crowd, discovery, doctor, examples, flow, humanoid, manifest, media, micontrol,
 page, registry, repo, routes, schema, serve, share, smoke, vehicle
 ```
 
@@ -581,7 +609,30 @@ python -m pytest -q tests
 
 ## 发布
 
-打 tag 会通过 GitHub Actions 构建 wheel/sdist。如果配置了 `PYPI_API_TOKEN`，tag release 会自动发布到 PyPI。仓库也提供 Dockerfile：
+发布版本时需要同时覆盖 Python CLI、npm/OpenClaw 插件包和 release 资产：
+
+```bash
+pnpm install
+pnpm build
+pnpm test
+
+cd packages/chek-cli
+python -m pip install -e ".[dev]"
+python -m pytest -q tests
+python -m build
+
+chek --help
+chek ai-product +publish --help
+chek media +upload-cover --help
+```
+
+打 `vX.Y.Z` tag 后发布 GitHub Release，并上传：
+
+- root npm tarball，例如 `chek-chek-cli-X.Y.Z.tgz`
+- Python wheel，例如 `chek_cli-X.Y.Z-py3-none-any.whl`
+- Python sdist，例如 `chek_cli-X.Y.Z.tar.gz`
+
+PyPI、npm、Homebrew tap 和内部包源应消费同一个 release 版本号与 checksum。如果配置了 `PYPI_API_TOKEN` 或对应 registry token，可以由 CI 或发布脚本继续推送到正式包源。仓库也提供 Dockerfile：
 
 ```bash
 docker build -t chek-cli .

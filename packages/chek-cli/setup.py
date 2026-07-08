@@ -17,7 +17,7 @@ def read_readme() -> str:
 
 setup(
     name="chek-cli",
-    version="0.4.0",
+    version="0.5.0",
     author="CHEK frontend contributors",
     description="Agent-first CLI for CHEK product publication, review rooms, and backend capabilities",
     long_description=read_readme(),
@@ -36,6 +36,7 @@ setup(
         "dev": [
             "pytest>=7.0",
             "pytest-cov>=4.0",
+            "PyYAML>=6.0",
         ],
     },
     entry_points={

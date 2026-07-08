@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import mimetypes
 import sys
 import urllib.parse
 from pathlib import Path
@@ -36,6 +37,7 @@ from .api_core import (
     parse_json_arg,
     profile_list,
     request_api,
+    request_multipart_api,
     save_config,
     save_profile,
     save_profile_credential,
@@ -139,6 +141,7 @@ def main(ctx: click.Context, as_json: bool, output_format: str, identity: str | 
                         "ai-product +research-plan --category 生产力工具 --product-name Kimi --software-version '2026 年 7 月网页版'",
                         "ai-product +publish --category 生产力工具 --product-name Kimi --software-version '2026 年 7 月网页版' --reason '值得测' --dry-run",
                         "ai-product +publish --formal --category 具身机器人 --product-name Unitree --hardware-model H1 --software-version 'unitree_sdk2 main@7740f8b' ...",
+                        "media +upload-cover --file ./cover.png --source-url https://example.com/product --dry-run",
                         "ai-product +robot-version-edit --robot-id <robot_id> --product-name Unitree --hardware-model H1 --software-version 'unitree_sdk2 main@7740f8b'",
                         "ai-product +review --post-id <uuid> --stars 4 --comment '体验稳定' --dry-run",
                         "vehicle +search --query '小米 SU7' --dry-run",
@@ -469,6 +472,14 @@ CURATED_EXAMPLES = [
         "description": "Research, duplicate-check, and publish an AI product review room.",
         "command": "chek ai-product +publish --formal --category 具身机器人 --product-name Unitree --hardware-model H1 --software-version 'unitree_sdk2 main@7740f8b' --source-url https://www.unitree.com/operate/h1/ --cover-image-url https://img.chekkk.com/app_project_pic/example.png --cover-source-url https://www.unitree.com/operate/h1/ --linked-entity 'targetType=humanoid_robot,targetId=<robot_id>,title=H1,tagTitle=H1,subtitle=宇树' --dry-run",
         "schemaPaths": ["backend-app.buddy.postsPost", "backend-app.buddy.posts"],
+    },
+    {
+        "name": "media.upload-cover",
+        "domain": "media",
+        "positioning": ["AI 产品提报", "封面上传", "正式评审闭环"],
+        "description": "Upload a researched AI product cover to CHEK media before formal room publication.",
+        "command": "chek media +upload-cover --file ./cover.png --source-url https://www.unitree.com/operate/h1/ --dry-run",
+        "schemaPaths": ["backend-app.media.images"],
     },
     {
         "name": "ai-product.robot-version-edit",
@@ -1170,6 +1181,7 @@ def manifest_cmd(ctx: click.Context, include_operations: bool, operation_limit: 
                 "ai-product +list",
                 "ai-product +detail",
             ],
+            "media": ["media +upload-cover"],
             "workflows": [item["command"] for item in CURATED_EXAMPLES],
         },
         "registry": registry_operation_manifest(include_operations, limit=operation_limit),
@@ -1412,6 +1424,70 @@ def emit_duplicate_block(
         ctx.obj["json"],
     )
     raise SystemExit(1)
+
+
+@main.group()
+def media() -> None:
+    """CHEK media helpers for product covers and evidence assets."""
+
+
+@media.command("+upload-cover")
+@click.option("--file", "cover_file", type=click.Path(exists=True, dir_okay=False, path_type=Path), required=True, help="Local cover image file downloaded from a researched source.")
+@click.option("--source-url", required=True, help="Original web page or image URL used to verify the cover.")
+@click.option("--title", default="", help="Optional human-readable asset title.")
+@click.option("--purpose", default="ai_product_cover", show_default=True)
+@click.option("--media-kind", type=click.Choice(["image", "file"]), default="image", show_default=True)
+@click.option("--field-name", default="file", show_default=True, help="Multipart field name expected by the media endpoint.")
+@click.option("--content-type", default="", help="Override MIME type. Defaults to file extension detection.")
+@click.option("--timeout", type=int, default=60, show_default=True)
+@click.option("--dry-run", is_flag=True)
+@click.pass_context
+def media_upload_cover(
+    ctx: click.Context,
+    cover_file: Path,
+    source_url: str,
+    title: str,
+    purpose: str,
+    media_kind: str,
+    field_name: str,
+    content_type: str,
+    timeout: int,
+    dry_run: bool,
+) -> None:
+    """Upload a researched cover image to CHEK media for formal AI product publication."""
+    try:
+        endpoint = "/api/backend-app/media/v1/images" if media_kind == "image" else "/api/backend-app/media/v1/files"
+        resolved_type = content_type or mimetypes.guess_type(cover_file.name)[0] or "application/octet-stream"
+        result = request_multipart_api(
+            "POST",
+            endpoint,
+            files={field_name: (cover_file.name, cover_file.read_bytes(), resolved_type)},
+            fields={
+                "purpose": purpose,
+                "sourceUrl": source_url,
+                "source_url": source_url,
+                "title": title or cover_file.stem,
+            },
+            auth=True,
+            identity=request_identity(ctx),
+            timeout=timeout,
+            dry_run=dry_run,
+        )
+        if isinstance(result, dict):
+            result = {
+                **result,
+                "coverSourceUrl": source_url,
+                "agentGuidance": [
+                    "Use the returned CHEK media URL as --cover-image-url.",
+                    "Keep the original source URL as --cover-source-url.",
+                    "Do not use dev media URLs for formal production review rooms.",
+                ],
+            }
+        emit_api(ctx, "media +upload-cover", result)
+    except Exception as exc:
+        if isinstance(exc, SystemExit):
+            raise
+        fail("media +upload-cover", exc, ctx.obj["json"])
 
 
 @ai_product.command("+research-plan")

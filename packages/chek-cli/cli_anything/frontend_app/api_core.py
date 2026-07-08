@@ -6,10 +6,12 @@ This follows the lark-cli shape: config/auth/raw API/domain shortcuts.
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
 import stat
 import urllib.parse
 import urllib.request
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -583,6 +585,113 @@ def request_api(
         "url": url,
         "headers": redact_headers(headers),
         "body": data,
+        "auth": auth,
+        "identity": resolved_identity if auth else "none",
+    }
+    if dry_run:
+        return {"ok": True, "dryRun": True, "request": dry}
+
+    req = urllib.request.Request(url, data=body, method=method, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw_body = resp.read()
+            parsed = parse_response_body(raw_body, resp.headers.get("Content-Type", ""))
+            return normalize_api_result(resp.status, parsed, raw_body, dry)
+    except urllib.error.HTTPError as exc:
+        raw_body = exc.read()
+        parsed = parse_response_body(raw_body, exc.headers.get("Content-Type", ""))
+        result = normalize_api_result(exc.code, parsed, raw_body, dry)
+        result["ok"] = False
+        return result
+    except urllib.error.URLError as exc:
+        return {
+            "ok": False,
+            "status": None,
+            "error": {"type": "network", "message": str(exc)},
+            "request": dry,
+        }
+
+
+def build_multipart_body(
+    *,
+    fields: dict[str, Any] | None,
+    files: dict[str, tuple[str, bytes, str]],
+    boundary: str,
+) -> bytes:
+    chunks: list[bytes] = []
+    for key, value in (fields or {}).items():
+        if value is None or value == "":
+            continue
+        chunks.extend(
+            [
+                f"--{boundary}\r\n".encode("utf-8"),
+                f'Content-Disposition: form-data; name="{key}"\r\n\r\n'.encode("utf-8"),
+                str(value).encode("utf-8"),
+                b"\r\n",
+            ]
+        )
+    for field_name, (filename, content, content_type) in files.items():
+        resolved_type = content_type or mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        chunks.extend(
+            [
+                f"--{boundary}\r\n".encode("utf-8"),
+                (
+                    f'Content-Disposition: form-data; name="{field_name}"; '
+                    f'filename="{Path(filename).name}"\r\n'
+                ).encode("utf-8"),
+                f"Content-Type: {resolved_type}\r\n\r\n".encode("utf-8"),
+                content,
+                b"\r\n",
+            ]
+        )
+    chunks.append(f"--{boundary}--\r\n".encode("utf-8"))
+    return b"".join(chunks)
+
+
+def request_multipart_api(
+    method: str,
+    path: str,
+    *,
+    files: dict[str, tuple[str, bytes, str]],
+    fields: dict[str, Any] | None = None,
+    auth: bool = True,
+    identity: str | None = None,
+    timeout: int = 30,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    cfg = load_config()
+    url = build_url(path, config=cfg)
+    method = method.upper()
+    resolved_identity, token = credential_for_identity(identity)
+    boundary = f"----chek-cli-{uuid.uuid4().hex}"
+    body = build_multipart_body(fields=fields, files=files, boundary=boundary)
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "CHEK-CLI/0.1",
+        "Content-Type": f"multipart/form-data; boundary={boundary}",
+    }
+    if auth and token.get("access_token") and resolved_identity != "none":
+        raw_token = str(token["access_token"]).strip().removeprefix("Bearer ").strip()
+        headers["Authorization"] = f"Bearer {raw_token}"
+        headers["token"] = raw_token
+
+    dry = {
+        "method": method,
+        "url": url,
+        "headers": redact_headers(headers),
+        "body": {
+            "multipart": True,
+            "fields": {key: value for key, value in (fields or {}).items() if value not in (None, "")},
+            "files": [
+                {
+                    "field": field_name,
+                    "filename": filename,
+                    "contentType": content_type or mimetypes.guess_type(filename)[0] or "application/octet-stream",
+                    "size": len(content),
+                }
+                for field_name, (filename, content, content_type) in files.items()
+            ],
+        },
         "auth": auth,
         "identity": resolved_identity if auth else "none",
     }
