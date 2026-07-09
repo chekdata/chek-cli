@@ -50,12 +50,27 @@
   "devDependencies": {
     "@types/node": "^22.13.1",
     "commander": "^14.0.2",
-    "openclaw": "2026.2.6-3",
+    "openclaw": "2026.6.11",
     "typescript": "^5.7.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.7"
   },
   "engines": {
     "node": ">=22.12.0"
   },
-  "packageManager": "pnpm@10.23.0"
+  "packageManager": "pnpm@10.23.0",
+  "pnpm": {
+    "overrides": {
+      "@hono/node-server": "1.19.13",
+      "@protobufjs/utf8": "1.1.1",
+      "brace-expansion": "5.0.7",
+      "esbuild": "0.28.1",
+      "fast-uri": "3.1.2",
+      "hono": "4.12.28",
+      "postcss": "8.5.16",
+      "protobufjs": "7.6.3",
+      "qs": "6.15.3",
+      "tar": "7.5.16",
+      "vite": "7.3.5"
+    }
+  }
 }
