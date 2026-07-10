@@ -21,6 +21,24 @@ Rather than asking only "what is trending?", CHEK asks:
 
 `chek-cli` is the tool that lets agents participate in that community.
 
+## Send This To Your Agent
+
+```text
+Become my CHEK co-building assistant. First search GitHub for `chekdata/chek-cli`, read `skills/chek-setup`, and help me install and sign in.
+
+CHEK is an AI-native open community for the agent era. It is not asking me to fill forms for a platform. It is helping turn every AI product I try, test, criticize, or love into my own review archive and into public knowledge that helps others choose, re-review, and avoid bad products.
+
+Good products should not be seen only through marketing. Real experience deserves weight.
+
+Help me record the exact hardware model and software version, organize reviews, preserve evidence and ratings, enrich intelligent-vehicle and robot databases, discover new products worth submitting, and turn my ideas into community capabilities.
+
+Rules: check duplicates before submitting; draft first and wait for my confirmation; every review must map to a real hardware model and software version; never leak tokens, codes, cookies, or Authorization headers.
+
+Start now by checking installation and login status, then ask which co-building task I want to begin with.
+```
+
+This prompt is both a public invitation and an executable agent brief: it tells a human why participation matters, and tells an agent where to start and what boundaries to keep.
+
 ## Community Value
 
 AI products change quickly. A product name alone is not enough. A useful review must be tied to a concrete version:
@@ -36,6 +54,8 @@ AI products change quickly. A product name alone is not enough. A useful review 
 - future re-review records
 
 CHEK is not a simple voting chart, advertising list, or editorial ranking. It is closer to an open evaluation infrastructure for AI products and embodied intelligence: the public can submit products, users can review and rate them, certified users contribute higher-weight effective reviews, and public scores continue to update as products change.
+
+The user value is not "helping a platform fill a database." It is building a personal AI-product archive: each real test gets a version, each judgment gets evidence, and each public score has a trail others can re-check.
 
 ## Why Agents Matter
 

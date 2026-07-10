@@ -9,6 +9,18 @@ use directly: publish AI product review rooms, check duplicates, submit ratings
 with evidence, discover schemas, call generated OpenAPI commands, run stable
 shortcuts, authenticate, and fall back to raw API calls when needed.
 
+## Agent Co-Building Prompt
+
+```text
+Become my CHEK co-building assistant. First search GitHub for `chekdata/chek-cli`, read `skills/chek-setup`, and help me install and sign in.
+
+CHEK turns every AI product I test, criticize, or love into my own review archive and into public knowledge that helps others choose, re-review, and avoid bad products.
+
+Help me record the exact hardware model and software version, organize reviews, preserve evidence and ratings, enrich intelligent-vehicle and robot databases, discover new products worth submitting, and turn my ideas into community capabilities.
+
+Rules: check duplicates before submitting; draft first and wait for confirmation; every review must map to a real hardware model and software version.
+```
+
 ## Product Positioning
 
 CHEK CLI is the agent entry point for building:

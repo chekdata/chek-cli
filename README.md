@@ -18,6 +18,24 @@ Agent 时代，参与社区的方式也应该升级。
 
 `chek-cli` 做的就是这件事：让 Agent 不只是“帮你聊天”，而是能真正参与 CHEK 社区建设。
 
+## 把这段话发给你的 Agent
+
+```text
+请成为我的 CHEK 共建助手。先在 GitHub 搜索 `chekdata/chek-cli`，阅读 `skills/chek-setup` 并完成安装。
+
+CHEK 是一个为 Agent 时代生长出来的 AI-native 开放社区。它想做的不是让人帮平台填表，而是让每一次试驾、上手、踩坑、惊喜和吐槽，都变成属于我的 AI 产品档案，也变成能帮助别人选择、复评和避坑的公共知识。
+
+好产品不该只靠营销被看见，真实体验也应该有自己的分量。
+
+请帮我记录具体硬件型号和软件版本，整理评测，沉淀证据和评分，补全智能汽车 / 机器人资料库，发现值得提报的新产品，也把我的脑洞变成社区能力。
+
+规则：先查重，再提交；先草稿，等我确认；所有评测都要对应真实硬件型号和软件版本。
+
+现在开始，先问我想从哪一项共建开始。
+```
+
+这段话同时是传播文案和执行提示：人看到的是“为什么值得参与”，Agent 看到的是安装入口、任务范围和提交边界。
+
 ## 为什么需要 CHEK
 
 AI 产品越来越多，信息越来越多，但可信判断反而变难了。
@@ -54,6 +72,8 @@ CHEK 要做的不是简单投票榜，也不是广告榜，更不是编辑部拍
 ## 社区价值
 
 CHEK 的价值不只是“做一个榜单”，而是把 AI 产品和具身智能的真实体验组织成可复验的公共资产。
+
+你不是在给平台填表，而是在给自己的 AI 产品体验建立档案。每一次真实体验都不该只停留在聊天记录和相册里：让体验有版本，让判断有证据，让榜单有来处。
 
 ### 1. 版本化的 AI 产品评测网络
 
@@ -511,8 +531,8 @@ chek auth profile import dev-agent --file ./dev-agent.profile.json --activate
 ## 内置 Skills
 
 - [`skills/chek-setup/SKILL.md`](./skills/chek-setup/SKILL.md)：帮助 OpenClaw 完成 CHEK CLI setup、浏览器授权、token 兜底和健康检查。
-- [`skills/chek-ai-product-sourcing/SKILL.md`](./skills/chek-ai-product-sourcing/SKILL.md)：帮助 Agent 搜索、验证、分类、去重和整理 CHEK AI 产品候选，再进入正式 CLI 提报阶段。它只写本地文件或用户本轮指定的飞书/Lark 候选库，不硬编码默认候选库。
-- [`skills/chek-prod-ai-product-ops/SKILL.md`](./skills/chek-prod-ai-product-ops/SKILL.md)：帮助 Agent 在生产环境执行正式 AI 产品评审房间提报、封面溯源、车型/机器人绑定、版本编辑提交、评测证据发布和长期机器人数据库维护；这个 skill 明确禁止 DEV/staging 操作。
+- [`skills/chek-ai-product-sourcing/SKILL.md`](./skills/chek-ai-product-sourcing/SKILL.md)：帮助 Agent 搜索、验证、分类、去重和整理 CHEK AI 产品候选，也能把用户录音、速记、截图和体验材料整理成评审房间内容。它只写本地文件或用户本轮指定的飞书/Lark 候选库，不硬编码默认候选库。
+- [`skills/chek-prod-ai-product-ops/SKILL.md`](./skills/chek-prod-ai-product-ops/SKILL.md)：帮助 Agent 在生产环境执行正式 AI 产品评审房间提报、封面溯源、车型/机器人绑定、版本编辑提交、评测证据发布，以及长期智能汽车/机器人数据库维护；这个 skill 明确禁止 DEV/staging 操作。
 
 ## 前端和证据辅助
 
@@ -590,9 +610,9 @@ CI 也会运行 `scripts/check_registry_drift.py --allow-missing-optional`。如
 - `src/commands.ts`：`/chek-setup`、`/chek-status`、`/chek-bootstrap` 和 OpenClaw CLI 命令。
 - `src/service.ts`：后台轮询、浏览器授权同步、mention task 处理、房间回复编排。
 - `src/render.ts`：房间上下文压缩、intent 识别、直接回复和本地 prompt 构造。
-- `skills/chek-setup/SKILL.md`：随仓库发布的 setup skill。
-- `skills/chek-ai-product-sourcing/SKILL.md`：随仓库发布的 AI 产品候选 sourcing skill。
-- `skills/chek-prod-ai-product-ops/SKILL.md`：随仓库发布的 prod-only AI 产品提报和机器人库维护 skill。
+- `skills/chek-setup/SKILL.md`：随仓库发布的 setup 和社区共建入口 skill。
+- `skills/chek-ai-product-sourcing/SKILL.md`：随仓库发布的 AI 产品候选 sourcing 和评测素材整理 skill。
+- `skills/chek-prod-ai-product-ops/SKILL.md`：随仓库发布的 prod-only AI 产品提报、评测证据发布和车型/机器人库维护 skill。
 - `docs/bootstrap-message.md`：面向用户的一段式引导文案。
 - `docs/device-code-auth.md`：浏览器授权链路和 fallback 规则。
 - `docs/troubleshooting.md`：常见排障路径。

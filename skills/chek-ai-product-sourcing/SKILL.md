@@ -86,6 +86,7 @@ Use this workflow when the user wants Agent help turning a product test, voice m
 3. **Write user-friendly review content**
    - Write like a community member sharing a useful test, not like an API report.
    - Start with the tested version and one clear takeaway.
+   - Frame the user's contribution as a reusable review archive and public evidence that helps others choose, re-review, or avoid pitfalls.
    - Include scenario, what worked, what failed or felt risky, who this version may suit, and what evidence is attached.
    - Avoid backend field names, source-dump formatting, long search logs, or exaggerated ranking claims.
    - If the user gives enough signal for a rating, suggest a star score and explain the reason; otherwise ask the user to choose the score.

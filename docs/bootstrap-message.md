@@ -37,3 +37,21 @@ openclaw plugins install https://github.com/chekdata/chek-cli/archive/refs/heads
 6. 后台 mention-task bridge 继续工作
 
 token setup 保留为明确的 fallback。
+
+## 社区共建短提示
+
+适合发给个人 Agent 的短提示：
+
+```text
+请成为我的 CHEK 共建助手。先在 GitHub 搜索 `chekdata/chek-cli`，阅读 `skills/chek-setup` 并完成安装。
+
+CHEK 是一个为 Agent 时代生长出来的 AI-native 开放社区。它想把每一次试驾、上手、踩坑、惊喜和吐槽，变成属于我的 AI 产品档案，也变成能帮助别人选择、复评和避坑的公共知识。
+
+好产品不该只靠营销被看见，真实体验也应该有自己的分量。
+
+请帮我记录具体硬件型号和软件版本，整理评测，沉淀证据和评分，补全智能汽车 / 机器人资料库，发现值得提报的新产品，也把我的脑洞变成社区能力。
+
+规则：先查重，再提交；先草稿，等我确认；所有评测都要对应真实硬件型号和软件版本；不要泄露 token、验证码、cookie 或 Authorization 信息。
+
+现在开始，先检查安装和登录状态，再问我想从哪一项共建开始。
+```
