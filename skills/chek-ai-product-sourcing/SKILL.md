@@ -1,6 +1,6 @@
 ---
 name: chek-ai-product-sourcing
-description: Source, verify, classify, and package CHEK AI product candidates for either local output or a user-specified Feishu/Lark candidate base, including optional Zhihu Developer on-site search evidence. Use when the user asks to search for AI products, fill or update a CHEK candidate pool, apply monthly or quarterly release windows, assess domestic availability/borrowability, prepare fields for AI product submission, check duplicate product candidates, use developer.zhihu.com/Zhihu site search, or decide which candidates should be submitted later through the CHEK CLI.
+description: Source, verify, classify, and package CHEK AI product candidates for either local output or a user-specified Feishu/Lark candidate base, including optional Zhihu Developer on-site search evidence and user review-material processing. Use when the user asks to search for AI products, fill or update a CHEK candidate pool, apply monthly or quarterly release windows, assess domestic availability/borrowability, prepare fields for AI product submission, check duplicate product candidates, use developer.zhihu.com/Zhihu site search, turn recordings/transcripts/notes into user-friendly AI product reviews, or decide which candidates/reviews should be submitted later through the CHEK CLI.
 ---
 
 # CHEK AI Product Sourcing
@@ -21,10 +21,12 @@ Read [references/zhihu-developer-search.md](references/zhihu-developer-search.md
 - Do not assume a default Feishu Base. If the user has not chosen an output target, ask whether to output local files or write to a user-specified Feishu/Lark Base.
 - Use `lark-base` before operating Feishu Base. Follow its rule to read field structure before writing and to avoid concurrent `+record-list` calls.
 - Do not submit products through the CHEK CLI unless the user explicitly confirms which candidates to submit.
+- Do not publish user review material to a CHEK room unless the user explicitly confirms the target room or exact product tuple and authorizes posting.
 - Keep the Base simple. Do not add columns unless the user explicitly asks.
 - Deduplicate before writing. Check existing product names and, for final submission, also check product name + hardware model + software version.
 - Be honest about domestic access. Do not say a product can be borrowed or tested unless a source supports that. Use `待渠道确认` or `待实测材料` when access is plausible but unproven.
 - For pure software products, hardware model may be empty, but software version must be specific. For hardware, cars, robots, and glasses, capture both hardware model and software/firmware/app/vehicle version whenever possible.
+- For user recordings, transcripts, or rough notes, preserve the user's actual experience while removing private information, license plates, phone numbers, exact addresses, account identifiers, and unrelated personal details.
 
 ## Workflow
 
@@ -65,6 +67,71 @@ Read [references/zhihu-developer-search.md](references/zhihu-developer-search.md
    - For Feishu output, report total record count and duplicate check result.
    - For Feishu output, use `+data-query` for counts by `状态`, `类别`, and `统计时间窗口口径`.
    - State explicitly that CLI product submission has not been performed unless it actually has.
+
+## Review Material To Room Workflow
+
+Use this workflow when the user wants Agent help turning a product test, voice memo, transcript, shorthand notes, screenshots, videos, or links into a CHEK review-room contribution.
+
+1. **Collect material**
+   - Ask for the target room URL/post id or the exact `产品名 + 硬件型号 + 软件版本`.
+   - Accept audio files, transcripts, rough notes, photos, screenshots, video links, app logs, route/test summaries, and source URLs.
+   - If only audio is provided and the environment cannot transcribe it, ask the user for a transcript or concise voice-note export.
+
+2. **Extract review facts**
+   - Identify the exact product version, test date, test location or broad setting, scenario, duration, reviewer role, and evidence files.
+   - Extract what the user actually observed: successful tasks, failure cases, surprises, constraints, and confidence level.
+   - Separate facts from interpretation. Mark unclear claims as `待确认`, not as final conclusions.
+   - For intelligent vehicles and robots, keep hardware model and software/firmware/OTA version visible in the review draft.
+
+3. **Write user-friendly review content**
+   - Write like a community member sharing a useful test, not like an API report.
+   - Start with the tested version and one clear takeaway.
+   - Include scenario, what worked, what failed or felt risky, who this version may suit, and what evidence is attached.
+   - Avoid backend field names, source-dump formatting, long search logs, or exaggerated ranking claims.
+   - If the user gives enough signal for a rating, suggest a star score and explain the reason; otherwise ask the user to choose the score.
+
+4. **Find the correct room**
+   - If a post id is given, read back room detail before posting.
+   - If no room is given, run duplicate-room lookup by `产品名 + 硬件型号 + 软件版本`.
+   - If a duplicate room exists, post there instead of creating a new room.
+   - If no room exists, prepare a candidate submission summary and ask for explicit confirmation before formal CHEK CLI publication.
+
+5. **Post only after confirmation**
+   - Before any mutating command, verify prod with:
+
+```bash
+chek --json config show
+chek auth status
+```
+
+   - Use `chek ai-product +review` for star rating, review comment, and evidence when available.
+   - For follow-up room messages, discover the generated message command with `chek routes find buddy posts messages` or use the repository-supported room-message helper. Do not invent an endpoint.
+   - After posting, read back the room and confirm the review/evidence appears once.
+
+## Review Draft Template
+
+```text
+我这次测的是 <产品名> <硬件型号>，软件/系统版本是 <版本>。
+
+一句话结论：<最重要、最像用户真实体验的判断>
+
+测试场景：
+- <场景 1>
+- <场景 2>
+
+表现不错的地方：
+- <观察到的优点>
+
+需要注意的问题：
+- <观察到的问题或限制>
+
+我的评分：<星级，如果用户已确认>
+
+证据材料：
+- <截图/视频/链接/记录>
+
+补充说明：这次结论只对应上述硬件和软件版本，后续 OTA 或固件变化后建议复评。
+```
 
 ## Search Coverage Checklist
 

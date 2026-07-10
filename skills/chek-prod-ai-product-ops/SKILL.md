@@ -1,6 +1,6 @@
 ---
 name: chek-prod-ai-product-ops
-description: Production-only CHEK AI product operations for formal review-room publication, duplicate checks, cover upload/source auditing, vehicle/robot entity binding, version edit submissions, review evidence posting, approval checks, and long-term humanoid/robot database maintenance. Use when the user asks to operate CHEK prod, submit official AI product reviews, maintain robot database facts, enrich sales/open-source leaderboard support, or keep vehicle/robot versions synchronized through chek-cli.
+description: Production-only CHEK AI product operations for formal review-room publication, duplicate checks, cover upload/source auditing, vehicle/robot entity binding, version edit submissions, review evidence posting, approval checks, long-term humanoid/robot and vehicle database maintenance, user-supplied material extraction, and scheduled community data enrichment. Use when the user asks to operate CHEK prod, submit official AI product reviews, maintain robot or vehicle database facts, enrich leaderboard support, schedule recurring research/fill-in jobs, extract fields from user materials, or keep vehicle/robot versions synchronized through chek-cli.
 ---
 
 # CHEK Prod AI Product Ops
@@ -19,6 +19,8 @@ Operate **prod only**.
 Read [references/prod-cli-runbook.md](references/prod-cli-runbook.md) before running formal prod submissions, room edits, reviews, approvals, or media upload work.
 
 Read [references/robot-database-maintenance.md](references/robot-database-maintenance.md) before maintaining robot records, config versions, sales facts, price facts, open-source resources, or leaderboard support data.
+
+Read [references/vehicle-database-maintenance.md](references/vehicle-database-maintenance.md) before maintaining vehicle records, model/trim facts, hardware/software versions, raw parameters, intelligent-driving capability fields, source documents, or vehicle leaderboard support data.
 
 ## Core Workflow
 
@@ -52,8 +54,33 @@ Read [references/robot-database-maintenance.md](references/robot-database-mainte
 
 6. **Long-term database maintenance**
    - Maintain robot profile, config versions, sales facts, price facts, open-source resources, and evidence quality.
+   - Maintain vehicle profile, model/trim identity, hardware/software version lists, raw parameters, intelligent-driving capability facts, and evidence quality.
    - Prefer edit submissions over direct writes unless the CLI command is explicitly a governed admin action.
-   - Keep leaderboard support explainable: sales facts for sales ranking, community rooms for heat ranking, open-source resources plus room activity for open-source ranking.
+   - Keep leaderboard support explainable: sales or delivery facts for sales ranking, community rooms for heat ranking, open-source resources plus room activity for open-source ranking, and source-backed vehicle metrics for car rankings.
+
+7. **User material extraction**
+   - Accept user-supplied PDFs, screenshots, photos, spreadsheets, release notes, spec sheets, test notes, transcripts, or links.
+   - Extract only source-backed fields. Preserve the source file/link, page or timestamp when available, extracted value, confidence, and unanswered questions.
+   - For vehicles and robots, always separate brand/model identity from the real hardware model and software/firmware/system version.
+   - Convert raw materials into a structured edit draft first; perform prod writes only after prod preflight and an explicit user instruction.
+
+8. **Recurring community enrichment**
+   - When the user asks for a daily or weekly job, schedule a recurring research pass in the available automation system.
+   - Default cadence: weekly for broad database enrichment; daily only for active launch windows, leaderboard deadlines, or explicitly watched products.
+   - Each run should search current sources, dedupe against existing records, prepare edit drafts, and submit only mutations the user has authorized.
+   - Report every run with products checked, records updated or drafted, evidence gaps, and any prod writes performed.
+
+## Scheduled Job Pattern
+
+Use this pattern when setting up a recurring Agent task:
+
+```text
+每周搜索智能汽车和具身机器人近期发布、OTA、固件、SDK、销量/交付、开源资料和公开评测材料。
+先更新候选清单和资料库编辑草稿；只有在 prod 环境校验通过且用户授权时，才提交 CHEK prod 写操作。
+每次运行后汇报：新增/更新对象、证据来源、待补字段、重复项、提交 ID 和失败原因。
+```
+
+For daily jobs, narrow the scope to a watched brand/product/window. Do not run broad daily crawls that create low-quality writes.
 
 ## Room Content Standard
 

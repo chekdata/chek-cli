@@ -1,4 +1,4 @@
 interface:
   display_name: "CHEK AI Product Sourcing"
-  short_description: "维护 CHEK AI 产品候选、知乎证据、P0/P1实测任务与本地/飞书输出"
-  default_prompt: "Use $chek-ai-product-sourcing to source AI product candidates, enrich them with official and Zhihu Developer evidence, and mark P0/P1 evidence-collection tasks in local or user-specified Feishu output."
+  short_description: "维护 AI 产品候选、知乎证据、评测素材整理与本地/飞书输出"
+  default_prompt: "Use $chek-ai-product-sourcing to source AI product candidates, enrich them with official and Zhihu Developer evidence, process user recordings/transcripts into review-room drafts, and mark P0/P1 evidence-collection tasks in local or user-specified Feishu output."
