@@ -68,6 +68,17 @@ Create or update a version record when a room or ranking refers to a new real ha
 
 If the main vehicle entity is missing, do not publish an unbound formal AI product room. Create a missing-main-entry task with source evidence and ask for the governed creation path.
 
+## Duplicate And Cover Gate
+
+Before creating a vehicle main entry, search canonical model, brand/series, model year, trim, aliases, and known supplier naming. A new trim, model year, intelligent-driving package, OTA, SDK, or delivery event normally updates the existing vehicle/version structure rather than creating another main entry.
+
+Every new main entry must have a verified cover or an explicit blocked reason:
+
+- prefer the exact official model/trim hero or official launch image;
+- reject wrong model years, concept cars presented as production cars, group scenes with unclear subject, logos, watermarks, and unrelated supplier imagery;
+- upload to CHEK media, preserve the original cover source, read back the vehicle, and poll the asset to HTTP 200 before closing;
+- migrate in-scope external-only or dead covers to CHEK-hosted assets.
+
 ## Evidence Standards
 
 Use official and high-confidence sources first:
@@ -109,6 +120,7 @@ Before submitting an edit:
 - Confirm the source is current and reachable.
 - Preserve uncertainty with confidence notes instead of guessing.
 - Redact personal data, license plates, VINs, phone numbers, exact home/work locations, and private account information from user materials.
+- Confirm the exact vehicle/trim has no unresolved duplicate and has a verified cover plan when creating a main entry.
 
 Before approving an edit:
 

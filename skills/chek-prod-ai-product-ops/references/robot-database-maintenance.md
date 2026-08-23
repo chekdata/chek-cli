@@ -67,6 +67,40 @@ Create a config version when a review room targets a new real hardware/software 
 
 Do not overwrite an old version when the product has materially changed. Add a new version or a dated re-review package.
 
+## Duplicate And Entity-Type Gate
+
+Search canonical name, owner/brand, normalized model code, and aliases before a create and again immediately before approval. Read plausible matches and their version lists.
+
+- Update the existing main entity for the same real product and generation.
+- Use a config version/variant for a distinct SKU, generation, SDK, firmware, or experimental hardware scope when the schema supports it.
+- Keep same-name products from different owners separate.
+- Store an independently evaluated model/method as `benchmark_method`, not as physical hardware. It may be presented as a leaderboard subject but must retain its method identity.
+- Do not create a new physical robot for a delivery milestone, showcase, SDK, foundation-model release, or component unless it is independently modeled by the schema.
+
+## Cover Completion Gate
+
+A new main entry is not complete without a verified cover or an explicit blocked reason.
+
+- Prefer official product heroes, official release images, official conference exhibit images, or reputable original reporting. For `benchmark_method`, use the paper/project visual rather than an unrelated robot photo.
+- Visually verify the exact model and generation. Reject ambiguous group shots, wrong variants, logo-only placeholders, watermarks, and generated substitutes for real products.
+- Upload through CHEK media, preserve the original source URL, and store the returned CHEK media URL through governed edits.
+- Read back the robot and poll the media URL until it returns HTTP 200. A successful upload response alone is not completion because object storage may propagate asynchronously.
+
+## Capability Leaderboard Admission
+
+Do not expose every stored evaluation definition as a formal capability leaderboard. Maintain candidate, governed-definition, and formal-published states.
+
+Formal publication requires all of the following:
+
+- at least 10 distinct comparable subjects from at least 5 independent organizations in the same protocol partition;
+- a public stable protocol/version, task or dataset definition, environment and embodiment scope, aggregation rule, required trials, and evidence requirements;
+- exact subject/config identity, metric, unit, ranking direction, source, and trial/sample basis for every ranked result;
+- a common primary metric and no cross-benchmark aggregate score;
+- independently checkable official or paper evidence; fixtures and illustrative demos are excluded;
+- separate partitions for simulation versus real world, seen versus unseen, and materially different hardware scopes.
+
+Sub-threshold or paper-specific real-robot evaluations may remain in the evaluation library and appear as evidence on an entity detail page, but must not be promoted as a public cross-subject rank. Never infer trial counts from percentages.
+
 ## Sales Facts
 
 Sales leaderboard support should come from `salesFacts` and `leaderboardMetrics.sales`, not from vague popularity claims.
@@ -143,6 +177,7 @@ Before submitting an edit:
 - Confirm the fact belongs to the robot and version, not just the brand.
 - Use source-backed uncertainty instead of overclaiming.
 - Keep notes concise and audit-friendly.
+- Confirm a new entry has a verified cover plan and no unresolved duplicate match.
 
 Before approving an edit:
 
@@ -150,6 +185,7 @@ Before approving an edit:
 - Confirm no product/version identity mismatch.
 - Confirm no DEV room/media/source URL is referenced.
 - Confirm the submitted evidence is production-safe and user-readable.
+- Confirm the saved cover uses a production CHEK media URL, the original source is retained, and the asset returns HTTP 200.
 
 ## Reporting Format
 
