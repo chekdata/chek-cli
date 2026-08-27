@@ -57,6 +57,8 @@ Read [references/vehicle-database-maintenance.md](references/vehicle-database-ma
    - Maintain vehicle profile, model/trim identity, hardware/software version lists, raw parameters, intelligent-driving capability facts, and evidence quality.
    - Prefer edit submissions over direct writes unless the CLI command is explicitly a governed admin action.
    - Keep leaderboard support explainable: sales or delivery facts for sales ranking, community rooms for heat ranking, open-source resources plus room activity for open-source ranking, and source-backed vehicle metrics for car rankings.
+   - Treat duplicate resolution and cover completion as release gates for a new main entity. Preserve the original cover source and verify the CHEK-hosted asset after writeback.
+   - Do not publish every discovered evaluation standard as a capability leaderboard. Apply the formal admission gates in the robot maintenance reference; keep sub-threshold standards in the evaluation library or evidence queue.
 
 7. **User material extraction**
    - Accept user-supplied PDFs, screenshots, photos, spreadsheets, release notes, spec sheets, test notes, transcripts, or links.
@@ -115,6 +117,7 @@ Avoid titles like `资料整理`, `榜单支撑`, `开源材料`, `2026-xx-xx �
 - Use official pages, product pages, release notes, app stores, manufacturer media, store pages, GitHub repos, papers, trusted media, and first-hand test evidence.
 - Use Zhihu Developer search as Chinese discussion/evaluation evidence, not as the sole source for release date, version, availability, or sales facts.
 - For cover images, record both the CHEK media URL and the original web source URL.
+- Reject a cover if it shows the wrong model/generation, an unclear group scene, an unrelated robot/vehicle, a logo-only placeholder, or a method-to-hardware mismatch. Poll the CHEK media URL to HTTP 200 before closing the operation.
 - For sales facts, record month, units, confidence, source title, source URL, and whether the source is official, channel estimate, or media/reporting.
 - For open-source resources, record resource type, platform, URL, repo name if applicable, stars/forks if available, version linkage, confidence, and source date.
 

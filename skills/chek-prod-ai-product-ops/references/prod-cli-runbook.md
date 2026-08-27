@@ -86,6 +86,10 @@ Upload to CHEK prod media. If the generated `backend-app media images` command c
 - local downloaded file path until upload verification;
 - CHEK media URL returned by prod.
 
+After upload, poll the returned URL until it serves HTTP 200. Object storage/CDN propagation may briefly return 404. Do not approve or publish a record with a URL that has not passed readback, and do not mistake one early 404 for a permanent failure.
+
+For robot, vehicle, and benchmark-method covers, visually verify the exact identity. A paper/project figure is appropriate for a method; it must not be presented as a physical robot cover. Reject wrong generations, ambiguous group shots, logo-only placeholders, and unrelated product imagery.
+
 Do not use DEV media URLs for prod room covers.
 
 ## Robot And Vehicle Version Sync

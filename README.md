@@ -531,7 +531,8 @@ chek auth profile import dev-agent --file ./dev-agent.profile.json --activate
 ## 内置 Skills
 
 - [`skills/chek-setup/SKILL.md`](./skills/chek-setup/SKILL.md)：帮助 OpenClaw 完成 CHEK CLI setup、浏览器授权、token 兜底和健康检查。
-- [`skills/chek-ai-product-sourcing/SKILL.md`](./skills/chek-ai-product-sourcing/SKILL.md)：帮助 Agent 搜索、验证、分类、去重和整理 CHEK AI 产品候选，也能把用户录音、速记、截图和体验材料整理成评审房间内容。它只写本地文件或用户本轮指定的飞书/Lark 候选库，不硬编码默认候选库。
+- [`skills/formal-chinese-prd/SKILL.md`](./skills/formal-chinese-prd/SKILL.md)：将零散材料、现有文档或实现证据整理为正式、可评审、可验收的中文产品需求说明书，并提供结构、视觉布局与自动检查规范。
+- [`skills/chek-ai-product-sourcing/SKILL.md`](./skills/chek-ai-product-sourcing/SKILL.md)：帮助 Agent 搜索、验证、分类、去重和整理 CHEK AI 产品候选，也能把用户录音、速记、截图和体验材料整理成评审房间内容；用户明确指定 DEV 并授权执行时，还可按受控流程补充机器人、汽车、模型/方法、版本、封面和能力评测资料。它不硬编码默认候选库，也不会把候选整理静默升级成数据库写入。
 - [`skills/chek-prod-ai-product-ops/SKILL.md`](./skills/chek-prod-ai-product-ops/SKILL.md)：帮助 Agent 在生产环境执行正式 AI 产品评审房间提报、封面溯源、车型/机器人绑定、版本编辑提交、评测证据发布，以及长期智能汽车/机器人数据库维护；这个 skill 明确禁止 DEV/staging 操作。
 
 ## 前端和证据辅助
@@ -611,7 +612,8 @@ CI 也会运行 `scripts/check_registry_drift.py --allow-missing-optional`。如
 - `src/service.ts`：后台轮询、浏览器授权同步、mention task 处理、房间回复编排。
 - `src/render.ts`：房间上下文压缩、intent 识别、直接回复和本地 prompt 构造。
 - `skills/chek-setup/SKILL.md`：随仓库发布的 setup 和社区共建入口 skill。
-- `skills/chek-ai-product-sourcing/SKILL.md`：随仓库发布的 AI 产品候选 sourcing 和评测素材整理 skill。
+- `skills/formal-chinese-prd/SKILL.md`：随仓库发布的正式中文产品需求文档整理、评审与验收规范。
+- `skills/chek-ai-product-sourcing/SKILL.md`：随仓库发布的 AI 产品候选 sourcing、评测素材整理和显式授权 DEV 资料库增补 skill。
 - `skills/chek-prod-ai-product-ops/SKILL.md`：随仓库发布的 prod-only AI 产品提报、评测证据发布和车型/机器人库维护 skill。
 - `docs/bootstrap-message.md`：面向用户的一段式引导文案。
 - `docs/device-code-auth.md`：浏览器授权链路和 fallback 规则。

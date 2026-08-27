@@ -1,6 +1,6 @@
 ---
 name: chek-ai-product-sourcing
-description: Source, verify, classify, and package CHEK AI product candidates for either local output or a user-specified Feishu/Lark candidate base, including optional Zhihu Developer on-site search evidence and user review-material processing. Use when the user asks to search for AI products, fill or update a CHEK candidate pool, apply monthly or quarterly release windows, assess domestic availability/borrowability, prepare fields for AI product submission, check duplicate product candidates, use developer.zhihu.com/Zhihu site search, turn recordings/transcripts/notes into user-friendly AI product reviews, or decide which candidates/reviews should be submitted later through the CHEK CLI.
+description: Source, verify, classify, and package CHEK AI product candidates for local output, a user-specified Feishu/Lark candidate base, or an explicitly authorized CHEK DEV robot/vehicle/model enrichment run. Includes optional Zhihu Developer evidence and user review-material processing. Use when the user asks to search for AI products, maintain a candidate pool, enrich CHEK DEV robot/vehicle/model entries and versions, fill covers, deduplicate candidates, apply release windows, prepare formal submission fields, process review materials, or decide which candidates/reviews should be submitted later through the CHEK CLI.
 ---
 
 # CHEK AI Product Sourcing
@@ -13,6 +13,8 @@ Read [references/candidate-base.md](references/candidate-base.md) before writing
 
 Read [references/zhihu-developer-search.md](references/zhihu-developer-search.md) before using `developer.zhihu.com`, the Zhihu search API, or Zhihu on-site search results as evidence.
 
+Read [references/dev-library-enrichment.md](references/dev-library-enrichment.md) before reading or mutating the CHEK DEV robot, vehicle, benchmark-method, version, cover, or capability-evaluation library.
+
 ## Operating Rules
 
 - Browse the web for current product facts, release dates, versions, prices, official pages, App Store listings, and availability. Prefer official product pages, App Store pages, manufacturer pages, store pages, and reputable media.
@@ -24,6 +26,8 @@ Read [references/zhihu-developer-search.md](references/zhihu-developer-search.md
 - Do not publish user review material to a CHEK room unless the user explicitly confirms the target room or exact product tuple and authorizes posting.
 - Keep the Base simple. Do not add columns unless the user explicitly asks.
 - Deduplicate before writing. Check existing product names and, for final submission, also check product name + hardware model + software version.
+- Treat a new main entity, a new hardware/config version, and an update to an existing entity as three different actions. Do not create a new main entity when the evidence only describes a version, SDK, delivery milestone, or configuration change.
+- A newly created DEV robot, vehicle, or benchmark-method entry is incomplete until it has a verified CHEK-hosted cover or an explicit blocked reason. Keep the original cover source URL in the audit trail.
 - Be honest about domestic access. Do not say a product can be borrowed or tested unless a source supports that. Use `待渠道确认` or `待实测材料` when access is plausible but unproven.
 - For pure software products, hardware model may be empty, but software version must be specific. For hardware, cars, robots, and glasses, capture both hardware model and software/firmware/app/vehicle version whenever possible.
 - For user recordings, transcripts, or rough notes, preserve the user's actual experience while removing private information, license plates, phone numbers, exact addresses, account identifiers, and unrelated personal details.
@@ -67,6 +71,12 @@ Read [references/zhihu-developer-search.md](references/zhihu-developer-search.md
    - For Feishu output, report total record count and duplicate check result.
    - For Feishu output, use `+data-query` for counts by `状态`, `类别`, and `统计时间窗口口径`.
    - State explicitly that CLI product submission has not been performed unless it actually has.
+
+## Explicit DEV Library Enrichment
+
+Candidate sourcing and DEV library enrichment are separate modes. Enter DEV library enrichment only when the user explicitly names DEV and asks to create, update, enrich, approve, or backfill library records. Follow [references/dev-library-enrichment.md](references/dev-library-enrichment.md) for environment checks, duplicate resolution, entity/version decisions, cover upload, governed edits, capability-benchmark admission, and readback.
+
+Do not silently turn a candidate-pool request into a DEV mutation. Do not use this DEV mode for production.
 
 ## Review Material To Room Workflow
 
@@ -144,7 +154,7 @@ Use this checklist when the user asks whether anything is missing:
 - AI 健康应用: search independent apps plus platform entrances and mini-programs: 百度健康, 支付宝健康, 微信生态, AI+真人, 家庭医生, 报告解读, 症状自查, 免责声明.
 - 其他消费级 AI 产品: search AI glasses, AI recorder cards, AI recorder pens, wearable assistants, cameras, creator tools, video/image apps, phone-vendor ecosystem hardware.
 
-## Final Submission Boundary
+## Production Formal Submission Boundary
 
 Candidate sourcing and formal product submission are separate phases.
 
