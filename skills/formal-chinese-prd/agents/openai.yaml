@@ -1,0 +1,4 @@
+interface:
+  display_name: "正式中文产品需求文档"
+  short_description: "编写和重构适合正式评审的中文产品需求说明书，并完成图表与质量校验"
+  default_prompt: "使用 $formal-chinese-prd 将这份材料整理为简洁、正式、可评审的中文产品需求说明书。"
