@@ -74,12 +74,11 @@ async function runSetup(
   controller: ChekCliController,
   patch: Partial<ChekCliConfig>,
 ): Promise<string> {
-  // Keep a disabled entry for older hosts, but never save or use an old
-  // browser-auth token/session. Authentication belongs to the Python CLI.
+  // Keep a disabled entry for older hosts, clear only the retired browser
+  // authorization state, and preserve any ordinary CHEK token for migration.
   const savedConfig = await ensureBaseSetup(controller, {
     ...patch,
     enabled: false,
-    accessToken: "",
     authSessionId: "",
     deviceCode: "",
     authorizationStatus: "retired",
