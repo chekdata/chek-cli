@@ -300,6 +300,9 @@ export class ChekCliController {
           }
         } catch (error) {
           this.snapshot.lastError = summarizeError(error);
+          if (error instanceof ChekApiError && error.status === 410) {
+            await this.stop();
+          }
         }
       } else {
         this.snapshot.lastError = "CHEK access token is not configured.";
@@ -324,6 +327,9 @@ export class ChekCliController {
       }
     } catch (error) {
       this.snapshot.lastError = summarizeError(error);
+      if (error instanceof ChekApiError && error.status === 410) {
+        await this.stop();
+      }
       this.logger.error(`[chek-cli] poll failed: ${this.snapshot.lastError}`);
       await this.persistSnapshot();
     }

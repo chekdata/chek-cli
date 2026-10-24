@@ -216,3 +216,24 @@ describe("ChekCliController", () => {
     );
   });
 });
+
+it.each([
+  { accessToken: "ckmu_test_token" },
+  { authSessionId: "old-session", deviceCode: "old-code" },
+])("stops legacy polling permanently on HTTP 410 (%j)", async (credentials) => {
+  const config = { backendAppBaseUrl: "https://api-dev.chekkk.com/api/backend-app", ...credentials };
+  const controller = new ChekCliController({ config: parseConfig(config), logger: createLogger(), runtimeConfig: createRuntimeConfig(config) });
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "AGENT_FEATURE_RETIRED", detail: "Use Python CHEK CLI" }), { status: 410 }));
+  vi.stubGlobal("fetch", fetchMock);
+  try {
+    await controller.start();
+    await controller["pollOnce"]();
+    await controller["pollLoop"]();
+    expect(controller.getSnapshot().running).toBe(false);
+    expect(controller.getSnapshot().lastError).toContain("Use Python CHEK CLI");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  } finally {
+    await controller.stop();
+    vi.unstubAllGlobals();
+  }
+});

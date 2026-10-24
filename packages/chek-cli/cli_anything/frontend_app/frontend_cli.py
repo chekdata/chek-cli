@@ -2673,7 +2673,7 @@ def share_revoke(ctx: click.Context, share_id: str, dry_run: bool) -> None:
 
 @main.group()
 def micontrol() -> None:
-    """MiControl run orchestration shortcuts."""
+    """Legacy MiControl commands (retired in DEV; use business CLI instead)."""
 
 
 @micontrol.command("runs")

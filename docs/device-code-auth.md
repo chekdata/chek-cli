@@ -1,3 +1,5 @@
+> 历史插件文档：DEV 专用授权和自动回复已进入退役流程。新接入请使用 [Python CLI 统一指南](../skills/chek-setup/SKILL.md)。
+
 # CHEK CLI Browser Auth
 
 ## Current Reality
