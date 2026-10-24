@@ -175,12 +175,12 @@ The bundled registry is generated from CHEK backend OpenAPI specs.
 
 | Service | What it powers | Resources | Operations |
 | --- | --- | ---: | ---: |
-| `auth` | login, SMS/password/token auth, user info, scope checks, role/resource APIs, share tokens | 25 | 86 |
-| `backend-app` | rooms, mentions, discovery, media, assets, humanoid app views, observability | generated | generated |
-| `backend-saas` | vehicle metrics, reports, NOA journeys, rankings, report subscriptions, special points | 14 | 85 |
-| `crowd` | capture readiness, session catalog, benchmark releases, review queues, public orders | 7 | 127 |
-| `humanoid` | robot records, config versions, governance, edits, audit history | 6 | 21 |
-| `vehicle` | vehicle search, detail, diff, raw params, software versions, upload/sign flows | 6 | 39 |
+| `auth` | login, SMS/password/token auth, user info, scope checks, role/resource APIs, share tokens | 26 | 94 |
+| `backend-app` | rooms, mentions, discovery, media, assets, humanoid app views, observability | 25 | 104 |
+| `backend-saas` | vehicle metrics, reports, NOA journeys, rankings, report subscriptions, special points | 16 | 91 |
+| `crowd` | capture readiness, session catalog, benchmark releases, review queues, public orders | 21 | 267 |
+| `humanoid` | robot records, config versions, governance, edits, audit history | 7 | 25 |
+| `vehicle` | vehicle search, detail, diff, raw params, software versions, upload/sign flows | 6 | 40 |
 | **Total** | Agent-operable CHEK backend surface | **101** | **621** |
 
 ## Useful Commands

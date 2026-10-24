@@ -1,7 +1,7 @@
 {
   "_meta": {
     "failedSources": [],
-    "generatedAt": "2026-10-24T17:10:55.794461+00:00",
+    "generatedAt": "2026-10-24T19:51:25.189074+00:00",
     "generator": "scripts/generate_openapi_registry.py",
     "operationCount": 621,
     "serviceCount": 6,
@@ -54639,6 +54639,62 @@
               ]
             },
             "egoDatasetOrders": {
+              "description": "Get public EGO dataset order detail",
+              "httpMethod": "GET",
+              "operationId": "get_public_ego_dataset_order_detail_v1_public_ego_dataset_orders__order_id__get",
+              "parameters": [
+                {
+                  "description": null,
+                  "location": "path",
+                  "name": "order_id",
+                  "required": true,
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "path": "/api/crowd-control/v1/public/ego-dataset/orders/{order_id}",
+              "pathParameters": [
+                "order_id"
+              ],
+              "queryParameters": [],
+              "requestBody": null,
+              "responses": {
+                "200": {
+                  "contentTypes": [
+                    "application/json"
+                  ],
+                  "description": "Successful Response",
+                  "schema": {
+                    "application/json": {
+                      "$ref": "#/components/schemas/PublicEgoDatasetOrderRead"
+                    }
+                  }
+                },
+                "422": {
+                  "contentTypes": [
+                    "application/json"
+                  ],
+                  "description": "Validation Error",
+                  "schema": {
+                    "application/json": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              },
+              "security": null,
+              "source": {
+                "rawPath": "/v1/public/ego-dataset/orders/{order_id}",
+                "service": "crowd",
+                "servicePath": "/api/crowd-control"
+              },
+              "summary": "Get public EGO dataset order detail",
+              "tags": [
+                "catalog"
+              ]
+            },
+            "egoDatasetOrdersGet": {
               "description": "List current user's public EGO dataset orders",
               "httpMethod": "GET",
               "operationId": "list_my_public_ego_dataset_orders_v1_public_ego_dataset_orders_get",
@@ -54750,62 +54806,6 @@
                 "servicePath": "/api/crowd-control"
               },
               "summary": "List current user's public EGO dataset orders",
-              "tags": [
-                "catalog"
-              ]
-            },
-            "egoDatasetOrdersGet": {
-              "description": "Get public EGO dataset order detail",
-              "httpMethod": "GET",
-              "operationId": "get_public_ego_dataset_order_detail_v1_public_ego_dataset_orders__order_id__get",
-              "parameters": [
-                {
-                  "description": null,
-                  "location": "path",
-                  "name": "order_id",
-                  "required": true,
-                  "schema": {
-                    "type": "string"
-                  }
-                }
-              ],
-              "path": "/api/crowd-control/v1/public/ego-dataset/orders/{order_id}",
-              "pathParameters": [
-                "order_id"
-              ],
-              "queryParameters": [],
-              "requestBody": null,
-              "responses": {
-                "200": {
-                  "contentTypes": [
-                    "application/json"
-                  ],
-                  "description": "Successful Response",
-                  "schema": {
-                    "application/json": {
-                      "$ref": "#/components/schemas/PublicEgoDatasetOrderRead"
-                    }
-                  }
-                },
-                "422": {
-                  "contentTypes": [
-                    "application/json"
-                  ],
-                  "description": "Validation Error",
-                  "schema": {
-                    "application/json": {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  }
-                }
-              },
-              "security": null,
-              "source": {
-                "rawPath": "/v1/public/ego-dataset/orders/{order_id}",
-                "service": "crowd",
-                "servicePath": "/api/crowd-control"
-              },
-              "summary": "Get public EGO dataset order detail",
               "tags": [
                 "catalog"
               ]
@@ -71642,58 +71642,6 @@
               "tags": []
             },
             "editsPost": {
-              "description": "提交车型创建申请",
-              "httpMethod": "POST",
-              "operationId": "submit_create_vehicle_api_vehicles_edits_post",
-              "parameters": [],
-              "path": "/api/vms/api/vehicles/edits",
-              "pathParameters": [],
-              "queryParameters": [],
-              "requestBody": {
-                "contentTypes": [
-                  "application/json"
-                ],
-                "required": true,
-                "schema": {
-                  "application/json": {
-                    "$ref": "#/components/schemas/SubmitEditRequest"
-                  }
-                }
-              },
-              "responses": {
-                "200": {
-                  "contentTypes": [
-                    "application/json"
-                  ],
-                  "description": "Successful Response",
-                  "schema": {
-                    "application/json": {
-                      "$ref": "#/components/schemas/ApiResponse_SubmitEditResponse_"
-                    }
-                  }
-                },
-                "422": {
-                  "contentTypes": [
-                    "application/json"
-                  ],
-                  "description": "Validation Error",
-                  "schema": {
-                    "application/json": {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  }
-                }
-              },
-              "security": null,
-              "source": {
-                "rawPath": "/api/vehicles/edits",
-                "service": "vehicle",
-                "servicePath": "/api/vms"
-              },
-              "summary": "提交车型创建申请",
-              "tags": []
-            },
-            "editsPost2": {
               "description": "提交车型编辑申请",
               "httpMethod": "POST",
               "operationId": "submit_edit_api_vehicles__id__edits_post",
@@ -71756,6 +71704,58 @@
                 "servicePath": "/api/vms"
               },
               "summary": "提交车型编辑申请",
+              "tags": []
+            },
+            "editsPost2": {
+              "description": "提交车型创建申请",
+              "httpMethod": "POST",
+              "operationId": "submit_create_vehicle_api_vehicles_edits_post",
+              "parameters": [],
+              "path": "/api/vms/api/vehicles/edits",
+              "pathParameters": [],
+              "queryParameters": [],
+              "requestBody": {
+                "contentTypes": [
+                  "application/json"
+                ],
+                "required": true,
+                "schema": {
+                  "application/json": {
+                    "$ref": "#/components/schemas/SubmitEditRequest"
+                  }
+                }
+              },
+              "responses": {
+                "200": {
+                  "contentTypes": [
+                    "application/json"
+                  ],
+                  "description": "Successful Response",
+                  "schema": {
+                    "application/json": {
+                      "$ref": "#/components/schemas/ApiResponse_SubmitEditResponse_"
+                    }
+                  }
+                },
+                "422": {
+                  "contentTypes": [
+                    "application/json"
+                  ],
+                  "description": "Validation Error",
+                  "schema": {
+                    "application/json": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              },
+              "security": null,
+              "source": {
+                "rawPath": "/api/vehicles/edits",
+                "service": "vehicle",
+                "servicePath": "/api/vms"
+              },
+              "summary": "提交车型创建申请",
               "tags": []
             },
             "editsReject": {

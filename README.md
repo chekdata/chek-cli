@@ -422,12 +422,12 @@ chek backend-app humanoid leaderboards --dry-run
 
 | 服务 | 支撑的产品能力 | 资源数 | Operation 数 |
 | --- | --- | ---: | ---: |
-| `auth` | 登录、短信/密码/token、用户信息、scope 检查、角色/资源、分享 token | 25 | 86 |
-| `backend-app` | 房间、发现流、媒体、资产、人形机器人 App 视图、观测数据（生成快照含已退役接口） | 27 | 135 |
-| `backend-saas` | 车型指标、报告、NOA 行程、榜单、报告订阅、特殊点 | 14 | 85 |
-| `crowd` | 采集就绪、session catalog、benchmark release、审核队列、公开订单 | 7 | 127 |
-| `humanoid` | 机器人记录、配置版本、治理、编辑、审计历史 | 6 | 21 |
-| `vehicle` | 车型搜索、详情、diff、原始参数、软件版本、上传/签名链路 | 6 | 39 |
+| `auth` | 登录、短信/密码/token、用户信息、scope 检查、角色/资源、分享 token | 26 | 94 |
+| `backend-app` | 房间、发现流、媒体、资产、人形机器人 App 视图、观测数据（生成快照含已退役接口） | 25 | 104 |
+| `backend-saas` | 车型指标、报告、NOA 行程、榜单、报告订阅、特殊点 | 16 | 91 |
+| `crowd` | 采集就绪、session catalog、benchmark release、审核队列、公开订单 | 21 | 267 |
+| `humanoid` | 机器人记录、配置版本、治理、编辑、审计历史 | 7 | 25 |
+| `vehicle` | 车型搜索、详情、diff、原始参数、软件版本、上传/签名链路 | 6 | 40 |
 | **合计** | Agent 可操作的 CHEK 后端面 | **101** | **621** |
 
 常用 registry 和原始调用命令：
