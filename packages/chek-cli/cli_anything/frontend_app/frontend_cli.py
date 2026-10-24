@@ -2673,7 +2673,7 @@ def share_revoke(ctx: click.Context, share_id: str, dry_run: bool) -> None:
 
 @main.group()
 def micontrol() -> None:
-    """MiControl run orchestration shortcuts."""
+    """Legacy MiControl namespace; all hosted execution commands are retired."""
 
 
 @micontrol.command("runs")
@@ -2682,13 +2682,9 @@ def micontrol() -> None:
 @click.option("--dry-run", is_flag=True)
 @click.pass_context
 def micontrol_runs(ctx: click.Context, status: str | None, limit: int, dry_run: bool) -> None:
-    """List MiControl runs."""
-    try:
-        emit_api(ctx, "micontrol runs", request_api("GET", "/api/backend-app/micontrol/v2/runs", params={"status": status, "limit": limit}, identity=request_identity(ctx), dry_run=dry_run))
-    except Exception as exc:
-        if isinstance(exc, SystemExit):
-            raise
-        fail("micontrol runs", exc, ctx.obj["json"])
+    """Explain the retired hosted run namespace without making a request."""
+    del status, limit, dry_run
+    fail("micontrol runs", RuntimeError("AGENT_FEATURE_RETIRED: use your own Agent with the Python CHEK CLI."), ctx.obj["json"])
 
 
 @micontrol.command("detail")
@@ -2696,13 +2692,9 @@ def micontrol_runs(ctx: click.Context, status: str | None, limit: int, dry_run: 
 @click.option("--dry-run", is_flag=True)
 @click.pass_context
 def micontrol_detail(ctx: click.Context, run_id: str, dry_run: bool) -> None:
-    """Get MiControl run detail."""
-    try:
-        emit_api(ctx, "micontrol detail", request_api("GET", f"/api/backend-app/micontrol/v2/runs/{quote_path_value(run_id)}", identity=request_identity(ctx), dry_run=dry_run))
-    except Exception as exc:
-        if isinstance(exc, SystemExit):
-            raise
-        fail("micontrol detail", exc, ctx.obj["json"])
+    """Explain the retired hosted run namespace without making a request."""
+    del run_id, dry_run
+    fail("micontrol detail", RuntimeError("AGENT_FEATURE_RETIRED: use your own Agent with the Python CHEK CLI."), ctx.obj["json"])
 
 
 @micontrol.command("create")
@@ -2712,18 +2704,9 @@ def micontrol_detail(ctx: click.Context, run_id: str, dry_run: bool) -> None:
 @click.option("--dry-run", is_flag=True)
 @click.pass_context
 def micontrol_create(ctx: click.Context, task: str, context: str | None, input_payload: str | None, dry_run: bool) -> None:
-    """Create a MiControl run."""
-    try:
-        body = {
-            "task": task,
-            "context": parse_json_arg(context, stdin=sys.stdin, flag_name="--context") or {},
-            "inputPayload": parse_json_arg(input_payload, stdin=sys.stdin, flag_name="--input-payload") or {},
-        }
-        emit_api(ctx, "micontrol create", request_api("POST", "/api/backend-app/micontrol/v2/runs", data=body, identity=request_identity(ctx), dry_run=dry_run))
-    except Exception as exc:
-        if isinstance(exc, SystemExit):
-            raise
-        fail("micontrol create", exc, ctx.obj["json"])
+    """Explain the retired hosted run namespace without making a request."""
+    del task, context, input_payload, dry_run
+    fail("micontrol create", RuntimeError("AGENT_FEATURE_RETIRED: use your own Agent with the Python CHEK CLI."), ctx.obj["json"])
 
 
 @main.command()

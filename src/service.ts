@@ -1,35 +1,16 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { ChekApiClient, ChekApiError } from "./chek-api.js";
 import {
   isConfigured,
   parseConfig,
   resolveAccessToken,
   withConfigPatch,
 } from "./config.js";
-import {
-  ensureSession,
-  injectSessionNote,
-  sendChatPrompt,
-} from "./gateway-cli.js";
-import {
-  buildAutoReplyPrompt,
-  buildFallbackReply,
-  buildReplyStrategy,
-  buildRoomSessionKey,
-  buildRoomSessionLabel,
-  buildTaskInjectionText,
-  extractChatReplyText,
-  selectRoomMessagesForContext,
-} from "./render.js";
 import type {
-  BuddyRoomMessage,
   ControllerSnapshot,
   BrowserAuthSession,
   ChekCliConfig,
-  MentionTask,
-  ProcessedTaskResult,
 } from "./types.js";
 import type { OpenClawPluginApi } from "./openclaw-types.js";
 
@@ -40,11 +21,11 @@ type Logger = {
   error: (message: string) => void;
 };
 
-const SESSION_LABEL = "CHEK Mentions";
 const PLUGIN_CONFIG_KEY = "chek-cli";
 const LEGACY_PLUGIN_CONFIG_KEY = "memor-upload";
 const STATUS_FILE_NAME = "chek-cli-status.json";
-const ROOM_CONTEXT_PAGE_SIZE = 100;
+const RETIRED_BRIDGE_MESSAGE =
+  "站内 Agent 执行、专用授权和房间自动回复已退役；请使用 Python CHEK CLI 连接自己的 Agent 工具。";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -59,13 +40,9 @@ function summarizeError(error: unknown): string {
 
 export class ChekCliController {
   private config: ChekCliConfig;
-  private readonly logger: Logger;
   private readonly runtimeConfig: OpenClawPluginApi["runtime"]["config"];
   private readonly snapshot: ControllerSnapshot;
-  private timer: NodeJS.Timeout | null = null;
-  private polling = false;
   private stateDir: string | null = null;
-  private started = false;
 
   constructor(params: {
     config: ChekCliConfig;
@@ -73,7 +50,6 @@ export class ChekCliController {
     runtimeConfig: OpenClawPluginApi["runtime"]["config"];
   }) {
     this.config = params.config;
-    this.logger = params.logger;
     this.runtimeConfig = params.runtimeConfig;
     this.snapshot = {
       running: false,
@@ -111,19 +87,15 @@ export class ChekCliController {
   }
 
   async start(): Promise<void> {
-    this.started = true;
-    this.snapshot.running = true;
+    // The root TypeScript package remains as a migration shim. It must never
+    // poll the retired hosted Agent endpoints or create a browser-auth session.
+    this.snapshot.running = false;
+    this.snapshot.lastError = RETIRED_BRIDGE_MESSAGE;
     await this.persistSnapshot();
-    this.scheduleNext(250);
   }
 
   async stop(): Promise<void> {
-    this.started = false;
     this.snapshot.running = false;
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
-    }
     await this.persistSnapshot();
   }
 
@@ -144,9 +116,6 @@ export class ChekCliController {
     this.snapshot.lastAuthorizedAt = config.lastAuthorizedAt || null;
     this.snapshot.lastError = null;
     await this.persistSnapshot();
-    if (this.started) {
-      this.scheduleNext(250);
-    }
   }
 
   async persistConfigPatch(patch: Partial<ChekCliConfig>): Promise<ChekCliConfig> {
@@ -183,285 +152,16 @@ export class ChekCliController {
   }
 
   async syncAuthorizationSession(): Promise<BrowserAuthSession | null> {
-    const authSessionId = this.config.authSessionId.trim();
-    const deviceCode = this.config.deviceCode.trim();
-    if (!authSessionId || !deviceCode) {
-      return null;
-    }
-    const api = new ChekApiClient({
-      baseUrl: this.config.backendAppBaseUrl,
-    });
-    const session = await api.pollBrowserAuthSession(authSessionId, deviceCode);
-    const patch: Partial<ChekCliConfig> = {
-      authorizationStatus: String(
-        session.authorizationStatus || session.status || this.config.authorizationStatus,
-      ).trim(),
-      authorizationUrl: String(session.authorizationUrl || this.config.authorizationUrl || "").trim(),
-      authorizedUserOneId: String(
-        session.authorizedUserOneId || this.config.authorizedUserOneId || "",
-      ).trim(),
-      authorizedDisplayName: String(
-        session.authorizedDisplayName || this.config.authorizedDisplayName || "",
-      ).trim(),
-      lastAuthorizedAt: String(session.authorizedAt || this.config.lastAuthorizedAt || "").trim(),
-    };
-    const pluginAccessToken = String(session.pluginAccessToken || "").trim();
-    if (pluginAccessToken) {
-      patch.accessToken = pluginAccessToken;
-    }
-    await this.persistConfigPatch(patch);
-    return session;
+    this.snapshot.lastError = RETIRED_BRIDGE_MESSAGE;
+    await this.persistSnapshot();
+    return null;
   }
 
   async runHealthCheck(): Promise<{ backend: string; gateway: string }> {
-    let accessToken = resolveAccessToken(this.config);
-    if (!accessToken && this.config.authSessionId.trim() && this.config.deviceCode.trim()) {
-      await this.syncAuthorizationSession();
-      accessToken = resolveAccessToken(this.config);
-    }
-    if (!accessToken) {
-      throw new Error("CHEK access token is not configured.");
-    }
-    const api = new ChekApiClient({
-      baseUrl: this.config.backendAppBaseUrl,
-      accessToken,
-    });
-    await api.probe();
-    await ensureSession(this.config.sessionKey, SESSION_LABEL);
     return {
-      backend: "ok",
-      gateway: "ok",
+      backend: "retired",
+      gateway: "use-python-cli",
     };
-  }
-
-  private injectSessionNoteForKeyBestEffort(
-    sessionKey: string,
-    message: string,
-    label: string,
-  ): void {
-    void injectSessionNote(sessionKey, message, label).catch((error) => {
-      this.logger.warn(
-        `[chek-cli] failed to inject ${label} note: ${summarizeError(error)}`,
-      );
-    });
-  }
-
-  private scheduleNext(delayMs: number): void {
-    if (!this.started) {
-      return;
-    }
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-    this.timer = setTimeout(() => {
-      void this.pollLoop();
-    }, delayMs);
-  }
-
-  private async pollLoop(): Promise<void> {
-    if (!this.started || this.polling) {
-      return;
-    }
-    this.polling = true;
-    try {
-      await this.pollOnce();
-    } finally {
-      this.polling = false;
-      this.scheduleNext(this.config.pollIntervalMs);
-    }
-  }
-
-  private async pollOnce(): Promise<void> {
-    this.snapshot.lastPollAt = nowIso();
-    this.snapshot.lastError = null;
-    this.snapshot.configured = isConfigured(this.config);
-    this.snapshot.accessTokenConfigured = Boolean(resolveAccessToken(this.config));
-    await this.persistSnapshot();
-
-    if (!this.config.enabled) {
-      return;
-    }
-    let accessToken = resolveAccessToken(this.config);
-    if (!accessToken) {
-      if (this.config.authSessionId.trim() && this.config.deviceCode.trim()) {
-        try {
-          const session = await this.syncAuthorizationSession();
-          const sessionStatus = String(session?.authorizationStatus || session?.status || "").trim();
-          if (String(session?.pluginAccessToken || "").trim()) {
-            this.snapshot.lastSuccessAt = nowIso();
-            this.snapshot.lastError = null;
-            accessToken = resolveAccessToken(this.config);
-          } else if (sessionStatus === "pending") {
-            this.snapshot.lastError = "Waiting for browser authorization.";
-          } else if (sessionStatus) {
-            this.snapshot.lastError = `Browser authorization status: ${sessionStatus}`;
-          } else {
-            this.snapshot.lastError = "CHEK browser authorization has not completed yet.";
-          }
-        } catch (error) {
-          this.snapshot.lastError = summarizeError(error);
-        }
-      } else {
-        this.snapshot.lastError = "CHEK access token is not configured.";
-      }
-      if (!accessToken) {
-        await this.persistSnapshot();
-        return;
-      }
-    }
-
-    const api = new ChekApiClient({
-      baseUrl: this.config.backendAppBaseUrl,
-      accessToken,
-    });
-
-    try {
-      const tasks = await api.listPendingMentionTasks(20);
-      this.snapshot.lastSuccessAt = nowIso();
-      await this.persistSnapshot();
-      for (const task of [...tasks].reverse()) {
-        await this.processTask(api, task);
-      }
-    } catch (error) {
-      this.snapshot.lastError = summarizeError(error);
-      this.logger.error(`[chek-cli] poll failed: ${this.snapshot.lastError}`);
-      await this.persistSnapshot();
-    }
-  }
-
-  private async processTask(api: ChekApiClient, task: MentionTask): Promise<void> {
-    let claimedTask: MentionTask | null = null;
-    const postId = String(task.payload.postId || task.postId || "").trim();
-    const taskSessionKey = postId
-      ? buildRoomSessionKey(this.config.sessionKey, postId)
-      : this.config.sessionKey;
-    const taskSessionLabel = postId ? buildRoomSessionLabel(task) : SESSION_LABEL;
-    try {
-      claimedTask = await api.claimMentionTask(task.id);
-    } catch (error) {
-      if (error instanceof ChekApiError && error.status === 409) {
-        return;
-      }
-      throw error;
-    }
-
-    try {
-      if (!postId) {
-        throw new Error(`Task ${task.id} is missing postId.`);
-      }
-
-      const roomMessages = await this.loadRoomMessages(api, task, postId);
-      await ensureSession(taskSessionKey, taskSessionLabel);
-      this.injectSessionNoteForKeyBestEffort(
-        taskSessionKey,
-        buildTaskInjectionText(task, roomMessages),
-        "CHEK @",
-      );
-
-      const processed = await this.generateReply(
-        task,
-        roomMessages,
-        taskSessionKey,
-        taskSessionLabel,
-      );
-      await api.sendRoomMessage(postId, processed.reply);
-      await api.completeMentionTask(task.id, {
-        reply: processed.reply,
-        mode: processed.mode,
-        sessionKey: processed.sessionKey,
-        intent: processed.intent,
-      });
-
-      this.snapshot.lastTaskAt = nowIso();
-      this.snapshot.lastTaskId = task.id;
-      this.snapshot.lastSuccessAt = nowIso();
-      this.injectSessionNoteForKeyBestEffort(
-        taskSessionKey,
-        `已自动回复到《${task.payload.postTitle || postId}》：${processed.reply}`,
-        "CHEK 已发送",
-      );
-      await this.persistSnapshot();
-    } catch (error) {
-      const reason = summarizeError(error);
-      this.snapshot.lastError = reason;
-      await this.persistSnapshot();
-      this.injectSessionNoteForKeyBestEffort(taskSessionKey, `自动回复失败：${reason}`, "CHEK 失败");
-      if (claimedTask) {
-        try {
-          await api.failMentionTask(task.id, {
-            error: reason,
-            sessionKey: taskSessionKey,
-          });
-        } catch (failError) {
-          this.logger.error(
-            `[chek-cli] failed to mark task ${task.id} as failed: ${summarizeError(failError)}`,
-          );
-        }
-      }
-    }
-  }
-
-  private async loadRoomMessages(
-    api: ChekApiClient,
-    task: MentionTask,
-    postId: string,
-  ): Promise<BuddyRoomMessage[]> {
-    try {
-      const messages = await api.listRoomMessages(postId, ROOM_CONTEXT_PAGE_SIZE);
-      return selectRoomMessagesForContext(task, messages);
-    } catch (error) {
-      this.logger.warn(
-        `[chek-cli] failed to load room context for ${postId}: ${summarizeError(error)}`,
-      );
-      return selectRoomMessagesForContext(task, []);
-    }
-  }
-
-  private async generateReply(
-    task: MentionTask,
-    roomMessages: BuddyRoomMessage[],
-    sessionKey: string,
-    sessionLabel: string,
-  ): Promise<ProcessedTaskResult> {
-    const strategy = buildReplyStrategy(task, roomMessages);
-    if (strategy.directReply) {
-      return {
-        reply: strategy.directReply,
-        mode: "strategy",
-        sessionKey,
-        intent: strategy.intent,
-      };
-    }
-
-    const prompt = buildAutoReplyPrompt(task, roomMessages);
-    try {
-      const result = await sendChatPrompt(sessionKey, prompt, {
-        sessionLabel,
-      });
-      const reply = extractChatReplyText(result);
-      if (!reply) {
-        throw new Error("OpenClaw returned an empty reply.");
-      }
-      return {
-        reply,
-        mode: "model",
-        sessionKey,
-        intent: strategy.intent,
-      };
-    } catch (error) {
-      const fallbackReply = buildFallbackReply(task, roomMessages);
-      this.injectSessionNoteForKeyBestEffort(
-        sessionKey,
-        `本地模型生成失败，已使用兜底回复：${summarizeError(error)}`,
-        "CHEK 兜底",
-      );
-      return {
-        reply: fallbackReply,
-        mode: "fallback",
-        sessionKey,
-        intent: strategy.intent,
-      };
-    }
   }
 
   private async persistSnapshot(): Promise<void> {

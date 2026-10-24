@@ -66,44 +66,8 @@ declare const chekCliPlugin: {
                 readonly label: "CHEK Backend URL";
                 readonly placeholder: "https://api-dev.chekkk.com/api/backend-app";
             };
-            readonly accessToken: {
-                readonly label: "CHEK Access Token";
-                readonly sensitive: true;
-                readonly help: "If left empty, the plugin falls back to CHEK_ACCESS_TOKEN from the environment.";
-            };
-            readonly pollIntervalMs: {
-                readonly label: "Poll Interval (ms)";
-            };
             readonly sessionKey: {
-                readonly label: "OpenClaw Session Key";
-                readonly placeholder: "agent:main:chek:mentions";
-            };
-            readonly installId: {
-                readonly label: "Install ID";
-            };
-            readonly deviceId: {
-                readonly label: "Device ID";
-            };
-            readonly authSessionId: {
-                readonly label: "Auth Session ID";
-            };
-            readonly deviceCode: {
-                readonly label: "Device Code";
-            };
-            readonly authorizationStatus: {
-                readonly label: "Authorization Status";
-            };
-            readonly authorizationUrl: {
-                readonly label: "Authorization URL";
-            };
-            readonly authorizedUserOneId: {
-                readonly label: "Authorized User One ID";
-            };
-            readonly authorizedDisplayName: {
-                readonly label: "Authorized User";
-            };
-            readonly lastAuthorizedAt: {
-                readonly label: "Last Authorized At";
+                readonly label: "Legacy Session Key (unused)";
             };
         };
     };

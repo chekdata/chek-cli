@@ -32,25 +32,7 @@ export const CONFIG_UI_HINTS = {
         label: "CHEK Backend URL",
         placeholder: "https://api-dev.chekkk.com/api/backend-app",
     },
-    accessToken: {
-        label: "CHEK Access Token",
-        sensitive: true,
-        help: "If left empty, the plugin falls back to CHEK_ACCESS_TOKEN from the environment.",
-    },
-    pollIntervalMs: { label: "Poll Interval (ms)" },
-    sessionKey: {
-        label: "OpenClaw Session Key",
-        placeholder: DEFAULT_SESSION_KEY,
-    },
-    installId: { label: "Install ID" },
-    deviceId: { label: "Device ID" },
-    authSessionId: { label: "Auth Session ID" },
-    deviceCode: { label: "Device Code" },
-    authorizationStatus: { label: "Authorization Status" },
-    authorizationUrl: { label: "Authorization URL" },
-    authorizedUserOneId: { label: "Authorized User One ID" },
-    authorizedDisplayName: { label: "Authorized User" },
-    lastAuthorizedAt: { label: "Last Authorized At" },
+    sessionKey: { label: "Legacy Session Key (unused)" },
 };
 function asRecord(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) {

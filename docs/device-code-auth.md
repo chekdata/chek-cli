@@ -1,54 +1,5 @@
-# CHEK CLI Browser Auth
+# 旧授权流程已退役
 
-## Current Reality
+DEV 已退役专用 Agent 授权、设备绑定和授权会话轮询。本文件只作为旧链接的迁移提示，不再提供浏览器授权、token 兜底或自动回复步骤。
 
-This flow is now implemented.
-
-`CHEK CLI` does not depend on token-only setup as the primary path. The default setup path is:
-
-1. install the plugin
-2. run `/chek-setup` or `openclaw chek setup`
-3. let the plugin open the CHEK authorization page in the browser
-4. authorize with the current CHEK login state
-5. let the plugin poll the auth session and persist a plugin-scoped access token
-
-## What the Browser Page Does
-
-The authorization page is served from the CHEK app origin and:
-
-- reads the current browser login token
-- posts it back to `backend-app`
-- marks the auth session as `authorized`
-- issues a plugin-scoped access token for this install and device
-- shows `已授权，可返回 OpenClaw`
-
-## What the Plugin Persists
-
-After a successful browser authorization, the plugin stores:
-
-- `installId`
-- `deviceId`
-- `authSessionId`
-- `deviceCode`
-- `authorizationStatus`
-- `authorizationUrl`
-- `authorizedUserOneId`
-- `authorizedDisplayName`
-- `lastAuthorizedAt`
-- `accessToken`
-
-The stored `accessToken` is the plugin-scoped token returned by `backend-app`, not the raw frontend browser token.
-
-## Fallback Path
-
-If browser auth cannot complete, token setup still works:
-
-```text
-/chek-setup token=<CHEK_ACCESS_TOKEN>
-```
-
-```bash
-openclaw chek setup --token <CHEK_ACCESS_TOKEN>
-```
-
-This fallback exists so setup can continue even when browser auto-open, browser login state, or auth-session polling is unavailable.
+新接入请阅读 [`skills/chek-setup/SKILL.md`](../skills/chek-setup/SKILL.md)，在自己的 Agent 工具中安装 Python CHEK CLI，并使用普通 CHEK 登录和业务权限。不要创建外部 Agent 授权，也不要重试旧授权接口；收到 `410 AGENT_FEATURE_RETIRED` 后应停止重试。

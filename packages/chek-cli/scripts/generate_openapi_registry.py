@@ -17,6 +17,15 @@ from typing import Any
 HTTP_METHODS = {"get", "post", "put", "patch", "delete", "head", "options"}
 VERSION_SEGMENT = re.compile(r"^v\d+(\.\d+)?$", re.I)
 
+# These names are already used by released CLI commands. Keep them stable when
+# a newly added collection route collides with an existing item route.
+PRESERVED_METHOD_KEYS = {
+    ("vehicle", "/api/vehicles/{id}/edits", "post"): "editsPost",
+    ("vehicle", "/api/vehicles/edits", "post"): "editsPost2",
+    ("crowd", "/v1/public/ego-dataset/orders/{order_id}", "get"): "egoDatasetOrders",
+    ("crowd", "/v1/public/ego-dataset/orders", "get"): "egoDatasetOrdersGet",
+}
+
 DEFAULT_SOURCES = [
     {
         "service": "auth",
@@ -233,6 +242,7 @@ def build_service_registry(source: dict[str, Any], spec: dict[str, Any]) -> tupl
             seen.add(dedupe_key)
 
             resource_key, method_key = derive_resource_method(service_path, path, method_l)
+            method_key = PRESERVED_METHOD_KEYS.get((source["service"], raw_path, method_l), method_key)
             resource = resources.setdefault(resource_key, {"methods": {}})
             methods = resource["methods"]
             method_key = unique_method_key(methods, method_key, method_l)

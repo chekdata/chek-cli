@@ -197,13 +197,13 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 | 层级 | 命令 | 用途 |
 | --- | --- | --- |
 | Shortcut | `ai-product +publish`, `ai-product +review`, `media +upload-cover`, `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | 给 Agent 的稳定高频工作流 |
-| OpenAPI 命令树 | `vehicle vehicles batch-search`, `backend-app agent skills-run`, `humanoid robots detail` | 自动生成的服务/资源/方法命令 |
+| OpenAPI 命令树 | `vehicle vehicles batch-search`, `backend-app entities suggestions`, `humanoid robots detail` | 自动生成的服务/资源/方法命令 |
 | API 命令 | `schema`, `call`, `api` | 参数发现、registry 调用、原始路径兜底 |
 | 会话 | `--as auto/user/service/none`, `config default-as`, `auth`, `auth profile`, `auth credential` | 类 Lark 的身份切换、环境、token、profile 与凭证管理 |
 | 发现与检查 | `examples`, `smoke api`, `registry status` | 自动例子、只读后端 smoke、registry 覆盖检查 |
 | 调试辅助 | `doctor`, `repo`, `routes`, `serve`, `build`, `page`, `flow` | 前端仓库、构建、页面证据诊断 |
 
-当前内置 registry 来自后端 OpenAPI，覆盖 6 个服务、493 个 operation：`auth`、`backend-app`、`backend-saas`、`crowd`、`humanoid`、`vehicle`。
+当前内置 registry 来自后端 OpenAPI，覆盖 6 个服务、621 个 operation：`auth`、`backend-app`、`backend-saas`、`crowd`、`humanoid`、`vehicle`。
 
 ```bash
 chek registry status

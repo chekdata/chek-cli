@@ -14,7 +14,7 @@ const chekCliPlugin = {
   id: "chek-cli",
   name: "CHEK CLI",
   description:
-    "Agent-native CHEK CLI and OpenClaw helpers for review rooms, AI product publication, and mention handling.",
+    "CHEK CLI migration guide for using the Python CLI from your own Agent environment.",
   configSchema: {
     parse: parseConfig,
     jsonSchema: CONFIG_JSON_SCHEMA,

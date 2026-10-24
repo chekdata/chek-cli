@@ -83,8 +83,8 @@ describe("render helpers", () => {
         expect(buildReplyStrategy(saleTask).directReply).toContain("支持开源共享，也接受商业授权/成品出售");
         expect(buildReplyStrategy(introTask).directReply).toContain("这是G1 动作模型");
         expect(buildReplyStrategy(openclawTask).intent).toBe("openclaw_bootstrap");
-        expect(buildReplyStrategy(openclawTask).directReply).toContain("openclaw plugins install");
-        expect(buildReplyStrategy(openclawTask).directReply).toContain("/chek-setup");
+        expect(buildReplyStrategy(openclawTask).directReply).toContain("Python CHEK CLI");
+        expect(buildReplyStrategy(openclawTask).directReply).toContain("自己的 Agent");
     });
     it("injects recent room context and honesty rules into the prompt", () => {
         const task = {
@@ -157,11 +157,10 @@ describe("render helpers", () => {
     });
     it("builds bootstrap text", () => {
         const message = buildBootstrapMessage();
-        expect(message).toContain("openclaw plugins install https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1");
-        expect(message).toContain("目标：");
-        expect(message).toContain("执行要求：");
-        expect(message).toContain("/chek-setup");
-        expect(message).toContain("已授权，可返回 OpenClaw");
-        expect(message).toContain("CHEK_ACCESS_TOKEN");
+        expect(message).toContain("Python CHEK CLI");
+        expect(message).toContain("自己的 Agent 工具");
+        expect(message).toContain("Cursor、Codex、Claude Code");
+        expect(message).toContain("普通 ChatGPT、豆包");
+        expect(message).toContain("app-dev.chekkk.com/#/pages/agentConnect/index");
     });
 });

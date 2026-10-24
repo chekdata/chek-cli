@@ -2,7 +2,7 @@ from click.testing import CliRunner
 import pytest
 
 from cli_anything.frontend_app.frontend_cli import main
-from cli_anything.frontend_app.registry import REGISTRY_META
+from cli_anything.frontend_app.registry import REGISTRY, REGISTRY_META
 
 
 @pytest.fixture(autouse=True)
@@ -57,6 +57,16 @@ def test_openapi_registry_coverage():
     assert REGISTRY_META["operationCount"] >= 490
     assert REGISTRY_META["failedSources"] == []
     assert set(REGISTRY_META["sources"]) == {"auth", "backend-app", "backend-saas", "crowd", "humanoid", "vehicle"}
+
+
+def test_registry_preserves_existing_business_command_identities():
+    vehicle_methods = REGISTRY["vehicle"]["resources"]["vehicles"]["methods"]
+    assert vehicle_methods["editsPost"]["path"] == "/api/vms/api/vehicles/{id}/edits"
+    assert vehicle_methods["editsPost2"]["path"] == "/api/vms/api/vehicles/edits"
+
+    crowd_methods = REGISTRY["crowd"]["resources"]["public"]["methods"]
+    assert crowd_methods["egoDatasetOrders"]["path"].endswith("/orders/{order_id}")
+    assert crowd_methods["egoDatasetOrdersGet"]["path"].endswith("/orders")
 
 
 def test_raw_api_dry_run_json():

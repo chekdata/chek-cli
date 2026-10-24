@@ -1,157 +1,65 @@
 ---
 name: chek-setup
-description: Set up CHEK CLI and OpenClaw browser/token auth, then guide users and their personal agents into CHEK community co-building workflows for vehicle/robot database enrichment, AI product review recording, evidence posting, public ranking support, and room conversations. Use when the user asks to install CHEK CLI, bind a token/device, run /chek-setup, bootstrap CHEK agent participation, or understand how an agent can help co-build the CHEK community.
+description: Install the Python CHEK CLI in any agent with local command execution, verify ordinary CHEK sign-in and the requested environment, then guide community contributions. Chat-only tools prepare drafts without claiming execution. No OpenClaw-specific authorization or plugin setup.
 ---
 
 # CHEK Setup
 
-This skill teaches OpenClaw how to finish CHEK CLI setup for CHEK review-room mentions, agent workflows, and community co-building.
+CHEK 是一个为 Agent 时代生长出来的 AI-native 开放社区。CHEK CLI 把产品资料、版本化评测、证据、评分、发现流、智驾报告、机器人榜、分享和房间协作变成可调用的业务操作。
 
-## What CHEK CLI Does
+## 先确认工具能力
 
-After setup, the plugin can:
+- Cursor、Codex、Claude Code 和其他可运行本地命令的 Agent：检查 Python、CLI、配置和登录状态，缺失时再安装。
+- 普通 ChatGPT、豆包等聊天模式：先整理草稿，明确说明无法在当前会话安装或运行 CLI。用户可以手动提交，或把草稿交给可执行 CLI 的工具。不要虚构安装、授权或发布结果。
+- OpenClaw 也直接使用 Python CLI，不需要安装专用插件、重启 Gateway、创建设备授权或启用自动回复。
 
-- poll CHEK room `@` mention tasks
-- inject each task into a stable local OpenClaw session
-- generate a short reply locally
-- send that reply back to the CHEK room
-- let agents use `chek ai-product ...` for AI product submission, duplicate checks, and reviews
-- let agents maintain vehicle and robot database facts with source-backed edit drafts
-- help users turn recordings, transcripts, screenshots, and notes into readable AI product reviews
-- support public rankings with version-specific evidence instead of vague brand claims
+## 安装与核对
 
-## Community Co-Building Message
-
-Use this complete message when inviting a user to give their personal Agent a clear CHEK participation prompt:
-
-```text
-请成为我的 CHEK 共建助手。先在 GitHub 搜索 `chekdata/chek-cli`，阅读 `skills/chek-setup` 并完成安装。
-
-CHEK 是一个为 Agent 时代生长出来的 AI-native 开放社区。
-
-它想做的不是让你帮平台填表，而是让你用过的每一款 AI 产品，都不只是一次很快消失的体验。
-
-每一次试驾、上手、踩坑、惊喜和吐槽，都可以变成属于你的 AI 产品档案，也变成能帮助别人选择、复评和避坑的公共知识。
-
-好产品不该只靠营销被看见，真实体验也应该有自己的分量。
-
-你的 Agent 可以帮你记录具体硬件型号和软件版本，整理评测，沉淀证据和评分，补全智能汽车 / 机器人资料库，发现值得提报的新产品，也把你的脑洞变成社区能力。
-
-让体验有版本，让判断有证据，让榜单有来处。
-
-执行规则：先查重，再提交；先草稿，等我确认；所有评测都要对应真实硬件型号和软件版本；不要泄露 token、验证码、cookie 或 Authorization 信息。
-
-现在开始，先检查安装和登录状态，再问我想从哪一项共建开始。
-```
-
-## After Setup: Guide The User Into One Of Three Paths
-
-1. **补智能汽车 / 机器人资料库**
-   - Ask what material the user has: official pages, screenshots, spec sheets, OTA notes, photos, spreadsheets, links, or test logs.
-   - Route production writes through `$chek-prod-ai-product-ops`.
-   - Extract source-backed fields first; submit prod edits only after prod auth and explicit user confirmation.
-   - For recurring work, help the user schedule a daily or weekly Agent task that searches, dedupes, drafts edits, and reports evidence gaps.
-
-2. **记录并发布 AI 产品评测**
-   - Encourage the user to record the testing process or export a transcript/速记.
-   - Accept audio, transcript, screenshots, videos, route/test summaries, app logs, and links.
-   - Route product sourcing, duplicate checks, and review-material drafting through `$chek-ai-product-sourcing`.
-   - Publish to a CHEK review room only after the target product version and room/post id are confirmed.
-
-3. **进入房间交流**
-   - Explain that room `@` mentions can be delivered to the user's local Agent after setup.
-   - Encourage natural discussion: version questions, evidence requests, comparison notes, test ideas, and product-room follow-ups.
-   - Keep replies concise, helpful, and community-facing.
-
-## Default Setup Path
-
-Today the default setup path is browser auth.
-
-Use:
-
-```text
-/chek-setup
-```
-
-Or in the CLI:
+先阅读完整 [README](../../README.md)，复用已有安装，不覆盖用户配置。新安装优先使用已发布的 Python CLI：
 
 ```bash
-openclaw chek setup
+python -m pip install "git+https://github.com/chekdata/chek-cli.git@v0.5.0#subdirectory=packages/chek-cli"
+chek --help
+chek auth status
 ```
 
-The plugin will:
+`v0.5.0` 是现有发布版；仓库 main 包含新的退役指引。需要最新开发版时，由用户明确选择 main 后再安装该分支。不要把仓库根目录的 npm/OpenClaw 插件当作 Python CLI。
 
-1. persist stable install / device identifiers
-2. create a CHEK auth session
-3. open the browser authorization page
-4. wait for the browser page to show `已授权，可返回 OpenClaw`
-5. persist the returned plugin token locally
-
-## Fallback Path
-
-If browser auth fails, token setup still works:
-
-```text
-/chek-setup token=<CHEK_ACCESS_TOKEN>
-```
+操作前核对目标环境、账号和身份。用户从 DEV 页面进入时只使用 DEV：
 
 ```bash
-openclaw chek setup --token <CHEK_ACCESS_TOKEN>
+chek config set-env dev
+chek config default-as user
+chek auth status
+chek auth profile list
 ```
 
-## Useful Follow-ups
+已有可用登录就直接复用。需要登录时，使用普通 CHEK 的短信、密码或用户已有凭据方式；让用户在本地安全输入，不让他们把验证码、密码或 token 粘到聊天。具体参数以 `chek auth login --help` 为准，不创建新的外部 Agent 授权。
 
-```text
-/chek-status
-/chek-bootstrap
-```
+环境明确之后再做只读验证：
 
 ```bash
-openclaw chek status
-openclaw chek bootstrap
+chek discovery +feed --q "AI 产品" --dry-run
+chek discovery +feed --q "AI 产品"
 ```
 
-## Canonical Bootstrap Message
+报告实际环境、身份和验证结果，不能只依据命令退出码声称登录成功。
 
-```text
-请在这台机器上安装并配置 CHEK CLI，并尽量自动完成初始化。
+## 选择一项共建
 
-目标：
-1. 安装 OpenClaw 插件 CHEK CLI
-2. 安装后重启 Gateway
-3. 自动拉起浏览器完成 CHEK 授权与设备绑定
-4. 做一次连通性测试
-5. 最后告诉我当前状态是否 ready
+1. 整理评测：从用户的体验、速记、录音转写、截图或视频中提取产品版本、场景、优点、问题和证据。
+2. 沉淀证据和评分：标明具体硬件型号、软件版本、测试条件、来源和利益关系。
+3. 补全资料库：整理智能汽车、机器人与 AI 产品的官方资料、参数和版本变化，保留来源。
+4. 发现与提报：先查重，再出草稿；用户确认目标和内容后提交。
+5. 房间协作：读取消息、整理观点、在用户明确要求后发布；人工 @ 通知保留，不自动轮询 mention 任务或代用户回复。
+6. 社区能力：完善开放工作流、分享证据、榜单和版本追踪。
 
-安装命令：
-openclaw plugins install https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1
+业务操作直接使用 `chek ai-product`、`vehicle`、`humanoid`、`discovery`、`share` 或对应业务 OpenAPI。不使用 `/agent/v1/tools:execute`、`skills:run` 或 `/micontrol/v2/runs`。
 
-如果插件安装成功但不能自动继续，请立即执行 `/chek-setup`。插件会自动打开浏览器到 CHEK 授权页；浏览器显示“已授权，可返回 OpenClaw”后，回到本地继续等待健康检查完成。
-如果浏览器授权失败，再退回 `/chek-setup token=<CHEK_ACCESS_TOKEN>` 或 `openclaw chek setup --token <CHEK_ACCESS_TOKEN>`。
+遵守真实版本、来源、查重、草稿和确认边界；按用户已有授权执行，不重复索要同一操作的许可。生产写操作遵循相应业务技能和实际权限；DEV 任务不得自动切换生产。
 
-参考链接：
-- 插件说明：https://github.com/chekdata/chek-cli#readme
-- setup skill：https://github.com/chekdata/chek-cli/blob/main/skills/chek-setup/SKILL.md
-- 浏览器授权说明：https://github.com/chekdata/chek-cli/blob/main/docs/device-code-auth.md
-- 排障说明：https://github.com/chekdata/chek-cli/blob/main/docs/troubleshooting.md
-```
+## 退役与故障处理
 
-## Agent Task Prompts After Installation
+收到 `410 AGENT_FEATURE_RETIRED` 表示旧托管能力已经退役，停止重试并改用业务 CLI。普通登录失败应按账号认证处理，不能通过旧插件 token、匿名调用或共享 tools 绕过权限。
 
-Vehicle and robot database enrichment:
-
-```text
-请使用 CHEK CLI 在生产环境帮我共建资料库：先搜索并整理最近值得补充的智能汽车/机器人资料，提取车型/机器人、硬件版本、软件版本、能力边界和来源证据；先给我编辑草稿和证据清单，我确认后再提交 prod 写操作。
-```
-
-Review recording to room contribution:
-
-```text
-我会把这次 AI 产品评测的录音、转写、截图或速记给你。请先提取测试版本、场景、优点、问题、证据和建议评分，整理成适合发到 CHEK 评审房间的用户友好内容；发布前先帮我确认对应房间，避免重复提报。
-```
-
-Recurring co-building task:
-
-```text
-请帮我设置每周一次 CHEK 共建任务：搜索智能汽车/机器人和消费级 AI 产品的新版本、新资料和公开评测；输出可审核的资料库编辑草稿、候选评审对象、证据缺口和需要我确认的提交项。
-```
+开始时先问用户想从哪一项共建开始；任务已明确时直接执行已授权的部分。

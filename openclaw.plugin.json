@@ -1,7 +1,7 @@
 {
   "id": "chek-cli",
   "name": "CHEK CLI",
-  "description": "Agent-native CHEK CLI and OpenClaw helpers for review rooms, AI product publication, and mention handling.",
+  "description": "Migration compatibility shim for using the Python CHEK CLI from your own Agent. Hosted execution, dedicated authorization, and automatic mention replies are retired.",
   "version": "0.5.0",
   "skills": [
     "./skills"
@@ -66,44 +66,8 @@
       "label": "CHEK Backend URL",
       "placeholder": "https://api-dev.chekkk.com/api/backend-app"
     },
-    "accessToken": {
-      "label": "CHEK Access Token",
-      "sensitive": true,
-      "help": "If left empty, the plugin falls back to CHEK_ACCESS_TOKEN from the environment."
-    },
-    "pollIntervalMs": {
-      "label": "Poll Interval (ms)"
-    },
     "sessionKey": {
-      "label": "OpenClaw Session Key",
-      "placeholder": "agent:main:chek:mentions"
-    },
-    "installId": {
-      "label": "Install ID"
-    },
-    "deviceId": {
-      "label": "Device ID"
-    },
-    "authSessionId": {
-      "label": "Auth Session ID"
-    },
-    "deviceCode": {
-      "label": "Device Code"
-    },
-    "authorizationStatus": {
-      "label": "Authorization Status"
-    },
-    "authorizationUrl": {
-      "label": "Authorization URL"
-    },
-    "authorizedUserOneId": {
-      "label": "Authorized User One ID"
-    },
-    "authorizedDisplayName": {
-      "label": "Authorized User"
-    },
-    "lastAuthorizedAt": {
-      "label": "Last Authorized At"
+      "label": "Legacy Session Key (unused)"
     }
   }
 }

@@ -7,6 +7,7 @@ import type {
 
 export const CURRENT_INSTALL_SPEC =
   "https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1";
+export const CHEK_CLI_REPOSITORY = "https://github.com/chekdata/chek-cli";
 
 const MAX_CONTEXT_MESSAGES = 6;
 
@@ -209,7 +210,7 @@ function buildDirectStrategyReply(
   const content = String(task.payload.messageContent || "");
   switch (intent) {
     case "openclaw_bootstrap":
-      return `第一步先安装 CHEK CLI：openclaw plugins install ${CURRENT_INSTALL_SPEC}。装完如果没自动继续，再执行 /chek-setup。`;
+      return "站内 Agent 执行和专用授权已退役。请在自己的 Agent 工具里安装 Python CHEK CLI；Cursor、Codex、Claude Code 可直接运行，聊天模式工具先生成草稿。";
     case "posting_copy":
       if (/怎么介绍|如何介绍|怎么讲|怎么描述/.test(content)) {
         return `可以直接发：这是${subject}，已附演示视频、适配机型和安装说明，拿来就能跑，感兴趣的来聊。`;
@@ -248,8 +249,8 @@ function buildStrategyGuidance(intent: ReplyIntent, subject: string): { guidance
   switch (intent) {
     case "openclaw_bootstrap":
       return {
-        guidance: "对方在问 OpenClaw / CHEK CLI 的安装、授权或绑定。请直接回答下一步操作，优先给安装命令和 /chek-setup，不要岔到房间内容优化。",
-        summary: "直接给 OpenClaw 安装与授权下一步",
+        guidance: "对方在问 CHEK CLI 接入。请说明站内 Agent 执行和专用授权已退役，并给出自己的 Agent 工具安装 Python CLI 的下一步。",
+        summary: "给出自己的 Agent 使用 CHEK CLI 的下一步",
       };
     case "posting_copy":
       return {
@@ -327,7 +328,7 @@ export function buildTaskInjectionText(
     `回复目标：${strategy.summary}`,
     "最近房间上下文：",
     formatRoomMessagesContext(recentMessages),
-    "插件会自动生成一条简短回复并回房间；如果失败，会把失败原因留在这里。",
+    "这是给你自己的 Agent 的草稿上下文；旧插件不会自动生成或发送房间回复。",
   ].join("\n");
 }
 
@@ -383,30 +384,24 @@ export function extractChatReplyText(payload: ChatFinalPayload): string {
 
 export function buildBootstrapMessage(): string {
   return [
-    "请在这台机器上安装并配置 CHEK 房间助手插件，并尽量自动完成初始化。",
+    "CHEK 的站内 Agent 执行、专用授权和房间自动回复已退役。请在你自己的 Agent 工具里使用 Python CHEK CLI。",
     "",
-    "目标：",
-    "1. 安装 OpenClaw 插件 CHEK CLI",
-    "2. 安装后重启 Gateway",
-    "3. 自动拉起浏览器完成 CHEK 授权与设备绑定",
-    "4. 做一次连通性测试",
-    "5. 最后告诉我当前状态是否 ready",
+    "安装：",
+    "git clone https://github.com/chekdata/chek-cli.git",
+    "cd chek-cli/packages/chek-cli && python -m pip install -e \".[dev]\"",
+    "chek config set-env dev",
+    "chek registry status",
     "",
-    "安装命令：",
-    `openclaw plugins install ${CURRENT_INSTALL_SPEC}`,
-    "",
-    "如果插件安装成功但不能自动继续，请立即执行 `/chek-setup`。插件会自动打开浏览器到 CHEK 授权页；浏览器显示“已授权，可返回 OpenClaw”后，回到本地继续等待健康检查完成。",
-    "如果浏览器授权失败，再退回 `/chek-setup token=<CHEK_ACCESS_TOKEN>` 或 `openclaw chek setup --token <CHEK_ACCESS_TOKEN>`。",
+    "使用边界：",
+    "- Cursor、Codex、Claude Code 等能执行本地命令的 Agent 可以直接运行 CHEK CLI。",
+    "- 普通 ChatGPT、豆包等聊天模式工具先生成草稿和命令，由用户确认或交给可执行 CLI 的 Agent。",
+    "- 普通 CHEK 登录、房间消息、人工 @、评测、证据、评分、分享和 EGO 上传继续保留。",
     "",
     "参考链接：",
-    "- 插件说明：https://github.com/chekdata/chek-cli#readme",
+    `- GitHub：${CHEK_CLI_REPOSITORY}`,
     "- setup skill：https://github.com/chekdata/chek-cli/blob/main/skills/chek-setup/SKILL.md",
-    "- 浏览器授权说明：https://github.com/chekdata/chek-cli/blob/main/docs/device-code-auth.md",
-    "- 排障说明：https://github.com/chekdata/chek-cli/blob/main/docs/troubleshooting.md",
+    "- DEV 接入页：https://app-dev.chekkk.com/#/pages/agentConnect/index",
     "",
-    "执行要求：",
-    "- 如果可以直接执行宿主机命令，就直接完成",
-    "- 如果某一步需要我人工确认，只在那一步向我索取最小必要信息",
-    "- 如果无法执行，不要假装成功；请明确说明失败原因、卡住步骤，以及下一条我应该发你的消息",
+    "执行要求：先读 GitHub 文档和 setup skill，再检查环境与普通 CHEK 登录；不要索取或回传无关 token、验证码、Cookie 或 Authorization header。",
   ].join("\n");
 }

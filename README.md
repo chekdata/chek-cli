@@ -18,6 +18,14 @@ Agent 时代，参与社区的方式也应该升级。
 
 `chek-cli` 做的就是这件事：让 Agent 不只是“帮你聊天”，而是能真正参与 CHEK 社区建设。
 
+## 接入方式与 DEV 退役说明
+
+带上你自己的 Agent 使用 **Python CHEK CLI**。Cursor、Codex、Claude Code，以及能运行本地命令的其他工具，可按 [chek-setup](skills/chek-setup/SKILL.md) 安装、登录并调用社区业务接口。普通 ChatGPT、豆包等聊天模式先整理草稿，再由用户在 CHEK 页面提交，或交给具有 CLI 执行能力的工具。
+
+不需要新建外部 Agent 授权、设备绑定或安装 OpenClaw 专用插件。普通 CHEK 账号登录和业务权限仍然必须保留。OpenClaw 也可以直接使用 Python CLI。
+
+DEV 正在退役站内咪控、托管 Agent/runtime、OpenClaw adapter、共享 tools/skills 转发和 mention 自动回复。房间消息、人工 @ 通知、评审、证据、评分、分享和 EGO 业务保留。旧接口返回 `410 AGENT_FEATURE_RETIRED` 后应停止重试。**本次没有部署 staging/prod，也没有删除历史数据。** 进度与边界见 [退役说明](DEPRECATION.md)。
+
 ## 把这段话发给你的 Agent
 
 ```text
@@ -145,9 +153,8 @@ CHEK 的气质会更偏专业、更偏工程、更偏证据。
 - 查询车型、硬件配置、软件版本和原始参数
 - 搜索和对比人形机器人产品
 - 读取发现流
-- 创建 MiControl run
 - 生成、解析、撤销分享链接
-- 把 CHEK 房间 `@` mention 接入本地 OpenClaw Agent
+- 读取房间消息，并在用户确认后发布内容
 
 它不是替代 CHEK App，而是让 Agent 也能成为社区参与者。
 
@@ -192,9 +199,6 @@ Python CLI 默认输出 JSON，`--json` 作为 `--format json` 的兼容别名�
 # pip / pipx：从发布 tag 安装 Python CLI
 python -m pip install "git+https://github.com/chekdata/chek-cli.git@v0.5.0#subdirectory=packages/chek-cli"
 
-# npm / pnpm：从 release 上传的 npm tarball 安装 OpenClaw 插件包
-npm install -g "https://github.com/chekdata/chek-cli/releases/download/v0.5.0/chek-chek-cli-0.5.0.tgz"
-
 # Homebrew 或内部包源：使用 v0.5.0 release tarball/wheel，并在公式或内网索引中记录 checksum
 ```
 
@@ -237,7 +241,6 @@ chek vehicle +buying-plan \
 chek vehicle +rankings --scene urban --window latest --dry-run
 chek humanoid +search --query "Unitree" --page-size 10 --dry-run
 chek discovery +feed --q "AI 产品" --dry-run
-chek micontrol create --task "帮我分析这次智驾报告" --dry-run
 ```
 
 ## 产品能力地图
@@ -250,8 +253,7 @@ chek micontrol create --task "帮我分析这次智驾报告" --dry-run
 | 智能汽车榜 | 城市、高速、场景化榜单回答“谁强、强在哪、证据是什么”。 | `vehicle +rankings` | `backend-saas.appVehicleMetrics.*`, `backend-saas.noaJour.highwayNoaRankTop3`, `backend-saas.options.scene` |
 | 机器人榜和数据库 | 搜索、对比、跟踪人形机器人产品和配置版本，看到热度与实力。 | `humanoid +search`, `humanoid +compare`, `humanoid +config` | `backend-app.humanoid.leaderboards`, `humanoid.robots.detail`, `humanoid.robots.configVersions`, `humanoid.edits.*` |
 | 发现广场 | 车辆、机器人、AI 产品、证据帖和评测房间进入公共发现流。 | `discovery +feed` | `backend-app.discovery.feed`, `feedFilters`, `swipeSessions`, `swipeSessionsActions` |
-| 咪控助手 | 带着当前页面、行程、车型或房间上下文提问，让助手把模糊需求转成结构化任务。 | `micontrol create`, `micontrol runs`, `micontrol detail` | `backend-app.micontrol.runs*`, `backend-app.agent.toolsExecute`, `backend-app.agent.toolSessions` |
-| 房间 @ 到本地 Agent | CHEK 房间 mention 变成本地 OpenClaw 上下文，生成回复并同步回房间。 | `/chek-setup`, `openclaw chek setup` | `backend-app.buddy.mentionTasks`, `openclawAuthSessions`, `posts/{id}/messages` |
+| CHEK CLI 共建 | 让自己的 Agent 搜索、整理、提报、评测、评分和沉淀证据。 | `ai-product +research-plan`, `+publish`, `vehicle +rankings`, `discovery +feed` | ordinary CHEK business APIs and OpenAPI operations |
 | 可分享证据 | 创建、解析、撤销分享 token，支持匿名或 scoped 访问。 | `share +create`, `share +resolve`, `share +revoke` | `auth.share.token`, `auth.share.resolve`, `auth.share.revoke` |
 | Agent 身份 | 用正确的 user/service 身份、token、profile 和 scope 执行任务。 | `config`, `auth`, `auth profile`, `auth credential`, 全局 `--as` | `auth.accounts.*`, `auth.sms.*`, `auth.userInfo`, `auth.validToken`, 本地 profile store |
 
@@ -420,13 +422,13 @@ chek backend-app humanoid leaderboards --dry-run
 
 | 服务 | 支撑的产品能力 | 资源数 | Operation 数 |
 | --- | --- | ---: | ---: |
-| `auth` | 登录、短信/密码/token、用户信息、scope 检查、角色/资源、分享 token | 25 | 86 |
-| `backend-app` | 房间、mention、发现流、媒体、资产、MiControl、人形机器人 App 视图、观测数据 | 27 | 135 |
-| `backend-saas` | 车型指标、报告、NOA 行程、榜单、报告订阅、特殊点 | 14 | 85 |
-| `crowd` | 采集就绪、session catalog、benchmark release、审核队列、公开订单 | 7 | 127 |
-| `humanoid` | 机器人记录、配置版本、治理、编辑、审计历史 | 6 | 21 |
-| `vehicle` | 车型搜索、详情、diff、原始参数、软件版本、上传/签名链路 | 6 | 39 |
-| **合计** | Agent 可操作的 CHEK 后端面 | **85** | **493** |
+| `auth` | 登录、短信/密码/token、用户信息、scope 检查、角色/资源、分享 token | 26 | 94 |
+| `backend-app` | 房间、发现流、媒体、资产、人形机器人 App 视图、观测数据（生成快照含已退役接口） | 25 | 104 |
+| `backend-saas` | 车型指标、报告、NOA 行程、榜单、报告订阅、特殊点 | 16 | 91 |
+| `crowd` | 采集就绪、session catalog、benchmark release、审核队列、公开订单 | 21 | 267 |
+| `humanoid` | 机器人记录、配置版本、治理、编辑、审计历史 | 7 | 25 |
+| `vehicle` | 车型搜索、详情、diff、原始参数、软件版本、上传/签名链路 | 6 | 40 |
+| **合计** | Agent 可操作的 CHEK 后端面 | **101** | **621** |
 
 常用 registry 和原始调用命令：
 
@@ -446,53 +448,21 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 
 ```text
 ai-product, api, auth, backend-app, backend-saas, build, call, config,
-crowd, discovery, doctor, examples, flow, humanoid, manifest, media, micontrol,
+crowd, discovery, doctor, examples, flow, humanoid, manifest, media,
 page, registry, repo, routes, schema, serve, share, smoke, vehicle
 ```
 
 CLI 分三层：
 
-- **Shortcut**：高频产品动作，比如 AI 产品提报、车型决策、榜单、人形机器人对比、发现流、分享 token、MiControl run。
+- **Shortcut**：高频产品动作，比如 AI 产品提报、车型决策、榜单、人形机器人对比、发现流、分享 token。
 - **OpenAPI 自动命令树**：覆盖 `auth`、`backend-app`、`backend-saas`、`crowd`、`humanoid`、`vehicle` 的后端能力。
 - **兜底原语**：`schema`、`call service.resource.method`、原始 `api METHOD PATH`，让 Agent 在 shortcut 不够用时仍能精确调用。
 
-## OpenClaw 插件
+## 旧 OpenClaw 插件
 
-安装插件：
+旧的浏览器授权、设备绑定、插件 token、房间 mention 轮询和自动回复已整体退役，DEV 不再提供这些接口。仓库根目录的 TypeScript 插件只保留迁移提示，不会创建授权会话、轮询旧接口或自动回复；新的安装入口是 Python CLI。
 
-```bash
-openclaw plugins install 'https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1'
-```
-
-OpenClaw 对话命令：
-
-```text
-/chek-setup
-/chek-status
-/chek-bootstrap
-```
-
-CLI 等价命令：
-
-```bash
-openclaw chek setup
-openclaw chek status
-openclaw chek bootstrap
-```
-
-默认 setup 走浏览器授权。浏览器授权失败时，token 兜底仍然可用：
-
-```text
-/chek-setup token=<CHEK_ACCESS_TOKEN>
-```
-
-```bash
-openclaw chek setup --token <CHEK_ACCESS_TOKEN>
-```
-
-完成 setup 后，插件会创建浏览器授权会话、保存稳定的 install/device 标识、轮询 CHEK 房间 `@` mention task、读取近期房间上下文、注入本地 OpenClaw 会话、生成回复、把回复发回 CHEK 房间，并把 mention task 标记为完成或失败。
-
-当前 intent 识别覆盖 setup/bootstrap、发布文案、上架判断、价值判断、吸引力判断、清晰度判断、下载排障、共享/出售选择和通用房间回复。
+新的接入请安装 `packages/chek-cli` 中的 Python CLI，按 [统一指南](skills/chek-setup/SKILL.md) 使用普通 CHEK 登录。普通房间协作仍走业务接口，发布前由用户确认。历史插件文档仅供迁移排查。
 
 ## 认证和 Profile
 
@@ -530,7 +500,7 @@ chek auth profile import dev-agent --file ./dev-agent.profile.json --activate
 
 ## 内置 Skills
 
-- [`skills/chek-setup/SKILL.md`](./skills/chek-setup/SKILL.md)：帮助 OpenClaw 完成 CHEK CLI setup、浏览器授权、token 兜底和健康检查。
+- [`skills/chek-setup/SKILL.md`](./skills/chek-setup/SKILL.md)：帮助 Cursor、Codex、Claude Code 等 Agent 安装 Python CLI、检查普通 CHEK 登录并开始社区共建。
 - [`skills/chek-ai-product-sourcing/SKILL.md`](./skills/chek-ai-product-sourcing/SKILL.md)：帮助 Agent 搜索、验证、分类、去重和整理 CHEK AI 产品候选，也能把用户录音、速记、截图和体验材料整理成评审房间内容。它只写本地文件或用户本轮指定的飞书/Lark 候选库，不硬编码默认候选库。
 - [`skills/chek-prod-ai-product-ops/SKILL.md`](./skills/chek-prod-ai-product-ops/SKILL.md)：帮助 Agent 在生产环境执行正式 AI 产品评审房间提报、封面溯源、车型/机器人绑定、版本编辑提交、评测证据发布，以及长期智能汽车/机器人数据库维护；这个 skill 明确禁止 DEV/staging 操作。
 
@@ -578,11 +548,7 @@ python -m pip install -e ".[browser,dev]"
 python -m playwright install chromium
 ```
 
-本地 OpenClaw 插件联调：
-
-```bash
-openclaw plugins install --link /absolute/path/to/chek-cli
-```
+根目录 TypeScript 包只做迁移兼容提示；它不再启动托管 Agent、创建专用授权、轮询 mention 或自动回复房间消息。
 
 ## 重新生成 OpenAPI Registry
 
@@ -607,14 +573,14 @@ CI 也会运行 `scripts/check_registry_drift.py --allow-missing-optional`。如
 - `packages/chek-cli/README.md`：package 级 CLI 说明。
 - `README.en.md`：英文附加说明。
 - `src/index.ts`：OpenClaw 插件入口。
-- `src/commands.ts`：`/chek-setup`、`/chek-status`、`/chek-bootstrap` 和 OpenClaw CLI 命令。
-- `src/service.ts`：后台轮询、浏览器授权同步、mention task 处理、房间回复编排。
+- `src/commands.ts`：迁移提示、状态和 Python CLI 指南。
+- `src/service.ts`：迁移兼容状态，不再启动后台轮询、浏览器授权或房间自动回复。
 - `src/render.ts`：房间上下文压缩、intent 识别、直接回复和本地 prompt 构造。
 - `skills/chek-setup/SKILL.md`：随仓库发布的 setup 和社区共建入口 skill。
 - `skills/chek-ai-product-sourcing/SKILL.md`：随仓库发布的 AI 产品候选 sourcing 和评测素材整理 skill。
 - `skills/chek-prod-ai-product-ops/SKILL.md`：随仓库发布的 prod-only AI 产品提报、评测证据发布和车型/机器人库维护 skill。
 - `docs/bootstrap-message.md`：面向用户的一段式引导文案。
-- `docs/device-code-auth.md`：浏览器授权链路和 fallback 规则。
+- `docs/device-code-auth.md`：旧授权流程退役后的迁移提示。
 - `docs/troubleshooting.md`：常见排障路径。
 
 ## 开发
