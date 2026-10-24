@@ -8,13 +8,9 @@ type Logger = {
 };
 export declare class ChekCliController {
     private config;
-    private readonly logger;
     private readonly runtimeConfig;
     private readonly snapshot;
-    private timer;
-    private polling;
     private stateDir;
-    private started;
     constructor(params: {
         config: ChekCliConfig;
         logger: Logger;
@@ -32,13 +28,6 @@ export declare class ChekCliController {
         backend: string;
         gateway: string;
     }>;
-    private injectSessionNoteForKeyBestEffort;
-    private scheduleNext;
-    private pollLoop;
-    private pollOnce;
-    private processTask;
-    private loadRoomMessages;
-    private generateReply;
     private persistSnapshot;
 }
 export {};

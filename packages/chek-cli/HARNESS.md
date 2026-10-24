@@ -56,10 +56,10 @@ On failure, `ok` is false and the process exits non-zero.
 | `vehicle` | `+search`, `detail`, `raw-params` | Vehicle metadata workflows |
 | `discovery` | `+feed` | Public discovery feed workflow |
 | `share` | `+create`, `+resolve`, `+revoke` | Share token workflows |
-| `micontrol` | `runs`, `detail`, `create` | MiControl run workflows |
+| `micontrol` | retired | Returns `AGENT_FEATURE_RETIRED` without a network request |
 | `doctor/repo/routes/serve/build/page/flow` | assorted | Optional frontend repo and browser helpers |
 
-Current bundled registry: 6 backend OpenAPI services and 493 operations:
+Current bundled registry: 6 backend OpenAPI services and 621 operations:
 `auth`, `backend-app`, `backend-saas`, `crowd`, `humanoid`, and `vehicle`.
 
 ## Agent Rules

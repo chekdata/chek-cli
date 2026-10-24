@@ -1,7 +1,7 @@
 {
   "name": "@chek/chek-cli",
   "version": "0.5.0",
-  "description": "CHEK CLI for agent-native product publication, review rooms, backend API access, and OpenClaw helpers.",
+  "description": "CHEK Python CLI and migration guide for using your own Agent environment.",
   "type": "module",
   "license": "MIT",
   "repository": {

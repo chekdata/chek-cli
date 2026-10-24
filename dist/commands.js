@@ -1,16 +1,10 @@
-import { randomUUID } from "node:crypto";
-import { execFile } from "node:child_process";
-import os from "node:os";
-import { parseSetupArgs } from "./args.js";
-import { ChekApiClient } from "./chek-api.js";
 import { maskToken, resolveAccessToken } from "./config.js";
 import { buildBootstrapMessage } from "./render.js";
-const AUTHORIZATION_WAIT_TIMEOUT_MS = 180_000;
 function formatStatus(controller) {
     const snapshot = controller.getSnapshot();
     return [
         "CHEK CLI 状态",
-        `- running: ${snapshot.running ? "yes" : "no"}`,
+        `- running: ${snapshot.running ? "yes" : "no (migration shim)"}`,
         `- configured: ${snapshot.configured ? "yes" : "no"}`,
         `- backend: ${snapshot.backendAppBaseUrl}`,
         `- session: ${snapshot.sessionKey}`,
@@ -33,14 +27,16 @@ function formatStatus(controller) {
 function formatSetupUsage() {
     return [
         "用法：",
-        "/chek-setup [backend=https://api-dev.chekkk.com/api/backend-app] [session=agent:main:chek:mentions] [interval=5000]",
+        "/chek-setup",
         "",
-        "默认会自动拉起浏览器做 CHEK 授权；如果浏览器授权失败，再退回：",
-        "/chek-setup token=<CHEK_ACCESS_TOKEN>",
+        "站内 Agent 执行、专用授权和房间自动回复已退役。这个兼容命令不会创建授权会话或轮询旧接口。",
         "",
-        "也可以在 CLI 里执行：",
-        "openclaw chek setup",
-        "openclaw chek setup --token <CHEK_ACCESS_TOKEN>",
+        "请在自己的 Agent 工具里使用 Python CHEK CLI：",
+        "git clone https://github.com/chekdata/chek-cli.git",
+        "cd chek-cli/packages/chek-cli && python -m pip install -e \".[dev]\"",
+        "chek config set-env dev && chek registry status",
+        "",
+        "Cursor、Codex、Claude Code 等可执行本地命令的工具可以直接运行；聊天模式工具先生成草稿。",
     ].join("\n");
 }
 function summarizeSavedConfig(config) {
@@ -55,155 +51,33 @@ function summarizeSavedConfig(config) {
         `- auth: ${config.authorizationStatus || "-"}`,
     ].join("\n");
 }
-function sleep(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
-function sanitizeToken(value) {
-    return value
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-}
-function withStableIdentity(config) {
-    const installId = config.installId.trim() || randomUUID();
-    const hostname = sanitizeToken(os.hostname()) || "openclaw-device";
-    const deviceId = config.deviceId.trim() || `${hostname}-${randomUUID().slice(0, 8)}`;
-    return { installId, deviceId };
-}
-function openViaCommand(command, args) {
-    return new Promise((resolve, reject) => {
-        execFile(command, args, (error) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            resolve();
-        });
-    });
-}
-async function openBrowser(url) {
-    const target = String(url || "").trim();
-    if (!target) {
-        throw new Error("Browser authorization URL is empty.");
-    }
-    if (process.platform === "darwin") {
-        await openViaCommand("open", [target]);
-        return;
-    }
-    if (process.platform === "win32") {
-        await openViaCommand("cmd", ["/c", "start", "", target]);
-        return;
-    }
-    await openViaCommand("xdg-open", [target]);
-}
 async function ensureBaseSetup(controller, patch) {
     const baseConfig = controller.getConfig();
     return await controller.persistConfigPatch({
-        ...withStableIdentity(baseConfig),
         ...patch,
     });
 }
-async function waitForBrowserAuthorization(controller, timeoutMs = AUTHORIZATION_WAIT_TIMEOUT_MS) {
-    const startedAt = Date.now();
-    while (Date.now() - startedAt <= timeoutMs) {
-        const session = await controller.syncAuthorizationSession();
-        const sessionStatus = String(session?.authorizationStatus || session?.status || "").trim();
-        if (String(session?.pluginAccessToken || "").trim()) {
-            return session;
-        }
-        if (sessionStatus === "expired" || sessionStatus === "cancelled") {
-            return session;
-        }
-        const delayMs = Math.max(1_500, Number(session?.pollIntervalMs || controller.getConfig().pollIntervalMs || 5_000));
-        await sleep(delayMs);
-    }
-    return null;
-}
-async function beginBrowserSetup(controller) {
-    const currentConfig = controller.getConfig();
-    const api = new ChekApiClient({
-        baseUrl: currentConfig.backendAppBaseUrl,
-    });
-    const session = await api.createBrowserAuthSession({
-        installId: currentConfig.installId,
-        deviceId: currentConfig.deviceId,
-        sessionKey: currentConfig.sessionKey,
-        metadata: {
-            source: "chek-cli",
-            setupMode: "browser_auth",
-        },
-    });
-    const authorizationUrl = String(session.authorizationUrl || "").trim();
-    const savedConfig = await controller.persistConfigPatch({
-        authSessionId: session.id,
-        deviceCode: String(session.deviceCode || "").trim(),
-        authorizationStatus: String(session.authorizationStatus || session.status || "pending").trim(),
-        authorizationUrl,
+async function runSetup(controller, patch) {
+    // Keep a disabled entry for older hosts, but never save or use an old
+    // browser-auth token/session. Authentication belongs to the Python CLI.
+    const savedConfig = await ensureBaseSetup(controller, {
+        ...patch,
+        enabled: false,
+        accessToken: "",
+        authSessionId: "",
+        deviceCode: "",
+        authorizationStatus: "retired",
+        authorizationUrl: "",
         authorizedUserOneId: "",
         authorizedDisplayName: "",
         lastAuthorizedAt: "",
-        accessToken: "",
     });
-    let browserMessage = `- browser: ${authorizationUrl || "authorization URL missing"}`;
-    if (authorizationUrl) {
-        try {
-            await openBrowser(authorizationUrl);
-            browserMessage = `- browser: opened ${authorizationUrl}`;
-        }
-        catch (error) {
-            browserMessage = `- browser: failed to auto-open (${error instanceof Error ? error.message : String(error)})\n- open this URL manually: ${authorizationUrl}`;
-        }
-    }
-    const authorizedSession = await waitForBrowserAuthorization(controller);
-    const authStatus = String(authorizedSession?.authorizationStatus || authorizedSession?.status || savedConfig.authorizationStatus || "").trim();
-    if (String(authorizedSession?.pluginAccessToken || "").trim()) {
-        const health = await controller.runHealthCheck();
-        return [
-            summarizeSavedConfig(controller.getConfig()),
-            browserMessage,
-            `- authorization: ok (${authorizedSession?.authorizedDisplayName || authorizedSession?.authorizedUserOneId || "authorized"})`,
-            `- health: backend ${health.backend}, gateway ${health.gateway}`,
-        ].join("\n");
-    }
-    return [
-        summarizeSavedConfig(controller.getConfig()),
-        browserMessage,
-        `- authorization: ${authStatus || "pending"}`,
-        "- next: keep the browser page open until it shows “已授权，可返回 OpenClaw”，然后再执行 /chek-status 查看是否 ready",
-    ].join("\n");
-}
-async function runSetup(controller, patch, opts) {
-    const savedConfig = await ensureBaseSetup(controller, patch);
-    if (!savedConfig.enabled) {
-        return `${summarizeSavedConfig(savedConfig)}\n- health: disabled`;
-    }
-    if (!opts.browserAuth) {
-        try {
-            const health = await controller.runHealthCheck();
-            return `${summarizeSavedConfig(savedConfig)}\n- health: backend ${health.backend}, gateway ${health.gateway}`;
-        }
-        catch (error) {
-            return `${summarizeSavedConfig(savedConfig)}\n- health: ${error instanceof Error ? error.message : String(error)}`;
-        }
-    }
-    if (resolveAccessToken(savedConfig)) {
-        try {
-            const health = await controller.runHealthCheck();
-            return `${summarizeSavedConfig(savedConfig)}\n- health: backend ${health.backend}, gateway ${health.gateway}`;
-        }
-        catch (error) {
-            return `${summarizeSavedConfig(savedConfig)}\n- health: ${error instanceof Error ? error.message : String(error)}`;
-        }
-    }
-    return await beginBrowserSetup(controller);
+    return `${summarizeSavedConfig(savedConfig)}\n- bridge: retired (no browser authorization, polling, or automatic room replies)\n\n${formatSetupUsage()}`;
 }
 export function registerChekCliCommands(api, controller) {
     api.registerCommand({
         name: "chek-setup",
-        description: "Configure CHEK CLI for CHEK mention-task polling.",
+        description: "Show the migration path to the Python CHEK CLI.",
         acceptsArgs: true,
         handler: async (ctx) => {
             const rawArgs = ctx.args?.trim() ?? "";
@@ -212,25 +86,7 @@ export function registerChekCliCommands(api, controller) {
                     text: `${formatSetupUsage()}\n\n${formatStatus(controller)}`,
                 };
             }
-            const parsed = parseSetupArgs(rawArgs);
-            const patch = {};
-            if (parsed.token !== undefined)
-                patch.accessToken = parsed.token;
-            if (parsed.backend !== undefined)
-                patch.backendAppBaseUrl = parsed.backend;
-            if (parsed.session !== undefined)
-                patch.sessionKey = parsed.session;
-            if (parsed.interval !== undefined)
-                patch.pollIntervalMs = parsed.interval;
-            if (parsed.enable !== undefined)
-                patch.enabled = parsed.enable;
-            if (parsed.token !== undefined) {
-                patch.authorizationStatus = "token_fallback";
-            }
-            const shouldStartBrowserAuth = parsed.token === undefined && (rawArgs.length === 0 || Object.keys(patch).length > 0);
-            const text = await runSetup(controller, patch, {
-                browserAuth: shouldStartBrowserAuth,
-            });
+            const text = await runSetup(controller, {});
             return {
                 text,
             };
@@ -238,14 +94,14 @@ export function registerChekCliCommands(api, controller) {
     });
     api.registerCommand({
         name: "chek-status",
-        description: "Show CHEK CLI runtime status.",
+        description: "Show migration-shim status.",
         handler: async () => ({
             text: formatStatus(controller),
         }),
     });
     api.registerCommand({
         name: "chek-bootstrap",
-        description: "Print the one-shot bootstrap text for CHEK CLI.",
+        description: "Print the Python CHEK CLI migration guide.",
         handler: async () => ({
             text: buildBootstrapMessage(),
         }),
@@ -256,29 +112,10 @@ export function registerChekCliProgram(program, api, controller) {
     const chek = program.command("chek").description("CHEK CLI helpers for CHEK");
     chek
         .command("setup")
-        .description("Persist CHEK CLI config into OpenClaw")
-        .option("--token <token>", "CHEK access token fallback")
-        .option("--backend <url>", "CHEK backend-app base URL")
-        .option("--session <key>", "Stable local OpenClaw session key")
-        .option("--interval <ms>", "Poll interval in milliseconds")
-        .option("--disable", "Disable the bridge after saving", false)
+        .description("Print the Python CHEK CLI migration guide")
         .action(async (options) => {
-        const patch = {};
-        if (options.token) {
-            patch.accessToken = String(options.token).trim();
-            patch.authorizationStatus = "token_fallback";
-        }
-        if (options.backend)
-            patch.backendAppBaseUrl = String(options.backend).trim();
-        if (options.session)
-            patch.sessionKey = String(options.session).trim();
-        if (options.interval !== undefined)
-            patch.pollIntervalMs = Number(options.interval);
-        if (options.disable)
-            patch.enabled = false;
-        const output = await runSetup(controller, patch, {
-            browserAuth: !options.token,
-        });
+        void options;
+        const output = await runSetup(controller, {});
         console.log(output);
     });
     chek

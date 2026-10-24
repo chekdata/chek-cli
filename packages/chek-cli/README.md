@@ -204,14 +204,14 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 | Layer | Commands | Purpose |
 | --- | --- | --- |
 | Shortcuts | `ai-product +publish`, `ai-product +review`, `media +upload-cover`, `vehicle +buying-plan`, `vehicle +compare`, `vehicle +rankings`, `humanoid +compare`, `discovery +feed`, `share +resolve` | Stable high-level workflows for agents |
-| OpenAPI tree | `vehicle vehicles batch-search`, `backend-app agent skills-run`, `humanoid robots detail` | Generated service/resource/method commands |
+| OpenAPI tree | `vehicle vehicles batch-search`, `backend-app entities suggestions`, `humanoid robots detail` | Generated service/resource/method commands |
 | API commands | `schema`, `call`, `api` | Discovery, registry-backed calls, and raw backend fallback |
 | Session | `--as auto/user/service/none`, `config default-as`, `auth`, `auth profile`, `auth credential` | Lark-style identity switching, API origin, token, profile, and credential management |
 | Discovery and checks | `examples`, `smoke api`, `registry status` | Generated examples, read-only backend smoke checks, and registry coverage |
 | Dev helpers | `doctor`, `repo`, `routes`, `serve`, `build`, `page`, `flow` | Optional frontend repo/build/browser diagnostics |
 
 The bundled registry is generated from backend OpenAPI specs and currently
-covers 6 services and 493 operations: `auth`, `backend-app`, `backend-saas`,
+covers 6 services and 621 operations: `auth`, `backend-app`, `backend-saas`,
 `crowd`, `humanoid`, and `vehicle`.
 
 ```bash

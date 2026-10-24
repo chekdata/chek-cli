@@ -253,7 +253,7 @@ chek discovery +feed --q "AI 产品" --dry-run
 | 智能汽车榜 | 城市、高速、场景化榜单回答“谁强、强在哪、证据是什么”。 | `vehicle +rankings` | `backend-saas.appVehicleMetrics.*`, `backend-saas.noaJour.highwayNoaRankTop3`, `backend-saas.options.scene` |
 | 机器人榜和数据库 | 搜索、对比、跟踪人形机器人产品和配置版本，看到热度与实力。 | `humanoid +search`, `humanoid +compare`, `humanoid +config` | `backend-app.humanoid.leaderboards`, `humanoid.robots.detail`, `humanoid.robots.configVersions`, `humanoid.edits.*` |
 | 发现广场 | 车辆、机器人、AI 产品、证据帖和评测房间进入公共发现流。 | `discovery +feed` | `backend-app.discovery.feed`, `feedFilters`, `swipeSessions`, `swipeSessionsActions` |
-| 咪控助手 | 带着当前页面、行程、车型或房间上下文提问，让助手把模糊需求转成结构化任务。 | `micontrol create`, `micontrol runs`, `micontrol detail` | `backend-app.micontrol.runs*`, `backend-app.agent.toolsExecute`, `backend-app.agent.toolSessions` |
+| CHEK CLI 共建 | 让自己的 Agent 搜索、整理、提报、评测、评分和沉淀证据。 | `ai-product +research-plan`, `+publish`, `vehicle +rankings`, `discovery +feed` | ordinary CHEK business APIs and OpenAPI operations |
 | 可分享证据 | 创建、解析、撤销分享 token，支持匿名或 scoped 访问。 | `share +create`, `share +resolve`, `share +revoke` | `auth.share.token`, `auth.share.resolve`, `auth.share.revoke` |
 | Agent 身份 | 用正确的 user/service 身份、token、profile 和 scope 执行任务。 | `config`, `auth`, `auth profile`, `auth credential`, 全局 `--as` | `auth.accounts.*`, `auth.sms.*`, `auth.userInfo`, `auth.validToken`, 本地 profile store |
 
@@ -428,7 +428,7 @@ chek backend-app humanoid leaderboards --dry-run
 | `crowd` | 采集就绪、session catalog、benchmark release、审核队列、公开订单 | 7 | 127 |
 | `humanoid` | 机器人记录、配置版本、治理、编辑、审计历史 | 6 | 21 |
 | `vehicle` | 车型搜索、详情、diff、原始参数、软件版本、上传/签名链路 | 6 | 39 |
-| **合计** | Agent 可操作的 CHEK 后端面 | **85** | **493** |
+| **合计** | Agent 可操作的 CHEK 后端面 | **101** | **621** |
 
 常用 registry 和原始调用命令：
 
@@ -448,7 +448,7 @@ chek api GET /api/backend-app/login/checkToken --dry-run
 
 ```text
 ai-product, api, auth, backend-app, backend-saas, build, call, config,
-crowd, discovery, doctor, examples, flow, humanoid, manifest, media, micontrol,
+crowd, discovery, doctor, examples, flow, humanoid, manifest, media,
 page, registry, repo, routes, schema, serve, share, smoke, vehicle
 ```
 
@@ -460,7 +460,7 @@ CLI 分三层：
 
 ## 旧 OpenClaw 插件
 
-旧的浏览器授权、设备绑定、插件 token、房间 mention 轮询和自动回复正在整体退役，DEV 不再提供这些接口。仓库根目录的 TypeScript 插件保留作迁移兼容，其轮询在收到 410 后停止；它不是新的安装入口。
+旧的浏览器授权、设备绑定、插件 token、房间 mention 轮询和自动回复已整体退役，DEV 不再提供这些接口。仓库根目录的 TypeScript 插件只保留迁移提示，不会创建授权会话、轮询旧接口或自动回复；新的安装入口是 Python CLI。
 
 新的接入请安装 `packages/chek-cli` 中的 Python CLI，按 [统一指南](skills/chek-setup/SKILL.md) 使用普通 CHEK 登录。普通房间协作仍走业务接口，发布前由用户确认。历史插件文档仅供迁移排查。
 
@@ -500,7 +500,7 @@ chek auth profile import dev-agent --file ./dev-agent.profile.json --activate
 
 ## 内置 Skills
 
-- [`skills/chek-setup/SKILL.md`](./skills/chek-setup/SKILL.md)：帮助 OpenClaw 完成 CHEK CLI setup、浏览器授权、token 兜底和健康检查。
+- [`skills/chek-setup/SKILL.md`](./skills/chek-setup/SKILL.md)：帮助 Cursor、Codex、Claude Code 等 Agent 安装 Python CLI、检查普通 CHEK 登录并开始社区共建。
 - [`skills/chek-ai-product-sourcing/SKILL.md`](./skills/chek-ai-product-sourcing/SKILL.md)：帮助 Agent 搜索、验证、分类、去重和整理 CHEK AI 产品候选，也能把用户录音、速记、截图和体验材料整理成评审房间内容。它只写本地文件或用户本轮指定的飞书/Lark 候选库，不硬编码默认候选库。
 - [`skills/chek-prod-ai-product-ops/SKILL.md`](./skills/chek-prod-ai-product-ops/SKILL.md)：帮助 Agent 在生产环境执行正式 AI 产品评审房间提报、封面溯源、车型/机器人绑定、版本编辑提交、评测证据发布，以及长期智能汽车/机器人数据库维护；这个 skill 明确禁止 DEV/staging 操作。
 
@@ -548,11 +548,7 @@ python -m pip install -e ".[browser,dev]"
 python -m playwright install chromium
 ```
 
-本地 OpenClaw 插件联调：
-
-```bash
-openclaw plugins install --link /absolute/path/to/chek-cli
-```
+根目录 TypeScript 包只做迁移兼容提示；它不再启动托管 Agent、创建专用授权、轮询 mention 或自动回复房间消息。
 
 ## 重新生成 OpenAPI Registry
 
@@ -577,14 +573,14 @@ CI 也会运行 `scripts/check_registry_drift.py --allow-missing-optional`。如
 - `packages/chek-cli/README.md`：package 级 CLI 说明。
 - `README.en.md`：英文附加说明。
 - `src/index.ts`：OpenClaw 插件入口。
-- `src/commands.ts`：`/chek-setup`、`/chek-status`、`/chek-bootstrap` 和 OpenClaw CLI 命令。
-- `src/service.ts`：后台轮询、浏览器授权同步、mention task 处理、房间回复编排。
+- `src/commands.ts`：迁移提示、状态和 Python CLI 指南。
+- `src/service.ts`：迁移兼容状态，不再启动后台轮询、浏览器授权或房间自动回复。
 - `src/render.ts`：房间上下文压缩、intent 识别、直接回复和本地 prompt 构造。
 - `skills/chek-setup/SKILL.md`：随仓库发布的 setup 和社区共建入口 skill。
 - `skills/chek-ai-product-sourcing/SKILL.md`：随仓库发布的 AI 产品候选 sourcing 和评测素材整理 skill。
 - `skills/chek-prod-ai-product-ops/SKILL.md`：随仓库发布的 prod-only AI 产品提报、评测证据发布和车型/机器人库维护 skill。
 - `docs/bootstrap-message.md`：面向用户的一段式引导文案。
-- `docs/device-code-auth.md`：浏览器授权链路和 fallback 规则。
+- `docs/device-code-auth.md`：旧授权流程退役后的迁移提示。
 - `docs/troubleshooting.md`：常见排障路径。
 
 ## 开发

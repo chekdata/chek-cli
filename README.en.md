@@ -111,10 +111,7 @@ For user-facing distribution, prefer GitHub Release assets or package registries
 # pip / pipx: install the Python CLI from the release tag
 python -m pip install "git+https://github.com/chekdata/chek-cli.git@v0.5.0#subdirectory=packages/chek-cli"
 
-# npm / pnpm: install the OpenClaw plugin package from the release tarball
-npm install -g "https://github.com/chekdata/chek-cli/releases/download/v0.5.0/chek-chek-cli-0.5.0.tgz"
-
-# Homebrew or internal package sources should point to the v0.5.0 release assets and checksums.
+# Homebrew or internal package sources should point to the v0.5.0 Python release assets and checksums.
 ```
 
 After installation, verify that the AI product commands are present:
@@ -156,7 +153,7 @@ chek vehicle +buying-plan \
 chek vehicle +rankings --scene urban --window latest --dry-run
 chek humanoid +search --query "Unitree" --page-size 10 --dry-run
 chek discovery +feed --q "AI 产品" --dry-run
-chek micontrol create --task "帮我分析这次智驾报告" --dry-run
+chek ai-product +research-plan --category 生产力工具 --product-name Kimi --software-version "2026 年 7 月网页版"
 ```
 
 ## Product Surface
@@ -169,8 +166,8 @@ chek micontrol create --task "帮我分析这次智驾报告" --dry-run
 | Vehicle leaderboards | City/highway/scene-aware rankings that answer who is strong and why. | `vehicle +rankings` | `backend-saas.appVehicleMetrics.*`, `backend-saas.noaJour.highwayNoaRankTop3`, `backend-saas.options.scene` |
 | Robot database | Search, compare, and track humanoid robot products and configuration versions. | `humanoid +search`, `humanoid +compare`, `humanoid +config` | `backend-app.humanoid.leaderboards`, `humanoid.robots.detail`, `humanoid.robots.configVersions`, `humanoid.edits.*` |
 | Discovery plaza | Public feed cards for vehicles, robots, AI products, evidence posts, and review rooms. | `discovery +feed` | `backend-app.discovery.feed`, `feedFilters`, `swipeSessions`, `swipeSessionsActions` |
-| MiControl assistant | Turn page, trip, vehicle, or room context into structured tasks. | `micontrol create`, `micontrol runs`, `micontrol detail` | `backend-app.micontrol.runs*`, `backend-app.agent.toolsExecute`, `backend-app.agent.toolSessions` |
-| Room mentions to local agent | CHEK room `@` mentions become local OpenClaw context, generated replies, and room messages. | `/chek-setup`, `openclaw chek setup` | `backend-app.buddy.mentionTasks`, `openclawAuthSessions`, `posts/{id}/messages` |
+| CHEK CLI co-building | Let your own Agent search, draft, submit, review, rate, and preserve evidence through normal CHEK business APIs. | `ai-product +research-plan`, `+publish`, `vehicle +rankings`, `discovery +feed` | business OpenAPI operations |
+| Room collaboration | Keep messages, human @ notifications, unread state, evidence, ratings, sharing, and EGO upload flows. | CHEK web UI or Python CLI | ordinary room and EGO APIs |
 
 ## OpenAPI Coverage
 
@@ -179,12 +176,12 @@ The bundled registry is generated from CHEK backend OpenAPI specs.
 | Service | What it powers | Resources | Operations |
 | --- | --- | ---: | ---: |
 | `auth` | login, SMS/password/token auth, user info, scope checks, role/resource APIs, share tokens | 25 | 86 |
-| `backend-app` | rooms, mentions, discovery, media, assets, MiControl, humanoid app views, observability | 27 | 135 |
+| `backend-app` | rooms, mentions, discovery, media, assets, humanoid app views, observability | generated | generated |
 | `backend-saas` | vehicle metrics, reports, NOA journeys, rankings, report subscriptions, special points | 14 | 85 |
 | `crowd` | capture readiness, session catalog, benchmark releases, review queues, public orders | 7 | 127 |
 | `humanoid` | robot records, config versions, governance, edits, audit history | 6 | 21 |
 | `vehicle` | vehicle search, detail, diff, raw params, software versions, upload/sign flows | 6 | 39 |
-| **Total** | Agent-operable CHEK backend surface | **85** | **493** |
+| **Total** | Agent-operable CHEK backend surface | **101** | **621** |
 
 ## Useful Commands
 
@@ -256,29 +253,19 @@ message is written for community readers, not as a raw evidence dump. Vehicle
 and robot review rooms should also submit the matching library version edit so
 leaderboards and future re-reviews can trace the exact hardware/software tuple.
 
-## OpenClaw Plugin
+## Migration compatibility
+
+Use the Python CLI from your own Agent environment:
 
 ```bash
-openclaw plugins install 'https://github.com/chekdata/chek-cli/archive/refs/heads/main.tar.gz?download=1'
+git clone https://github.com/chekdata/chek-cli.git
+cd chek-cli/packages/chek-cli
+python -m pip install -e ".[dev]"
+chek config set-env dev
+chek registry status
 ```
 
-OpenClaw-facing commands:
-
-```text
-/chek-setup
-/chek-status
-/chek-bootstrap
-```
-
-CLI equivalents:
-
-```bash
-openclaw chek setup
-openclaw chek status
-openclaw chek bootstrap
-```
-
-After setup, the plugin can create browser-auth sessions, persist stable install/device IDs, poll CHEK room `@` mention tasks, load recent room context, inject that context into a local OpenClaw session, generate a reply, send the reply back to the CHEK room, and complete or fail the mention task.
+The old TypeScript/OpenClaw package is migration compatibility only. It prints the Python CLI guide and never creates browser-auth sessions, polls mention tasks, or sends automatic room replies.
 
 ## Release
 
